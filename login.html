@@ -246,12 +246,18 @@
   </div>
 </div>
 
-<script type="module">
-  import { supabase } from "./supabase.js";
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // Supabase config (same as your dashboard)
+  const SUPABASE_URL = "https://cagajzhridvohsrviwaw.supabase.co";
+  const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhZ2FqemhyaWR2b2hzcnZpd2F3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyODQ0ODYsImV4cCI6MjA3OTg2MDQ4Nn0.CSZvT7tPgoEyXwUW_wLOzZUfSUPLAZMpbXvvLOn5cNo";
+  
+  const supabase = window.supabase.createClient(SUPABASE_URL, ANON_KEY);
 
+  // Check if already logged in
   supabase.auth.getSession().then(({ data }) => {
     if (data.session) {
-      window.location.href = "index.html";
+      window.location.href = "../index.html";
     }
   });
 
@@ -263,21 +269,27 @@
     const btn = document.getElementById("loginBtn");
     const msg = document.getElementById("message");
 
+    // Disable button and show loading
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span>Signing in...';
     msg.className = "message";
     msg.style.display = "none";
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
       if (error) throw error;
 
       msg.className = "message success";
       msg.textContent = "✓ Login successful! Redirecting...";
       
       setTimeout(() => {
-        window.location.href = "index.html";
+        window.location.href = "../index.html";
       }, 800);
+
     } catch (error) {
       msg.className = "message error";
       msg.textContent = error.message || "Login failed. Please try again.";
@@ -285,8 +297,6 @@
       btn.textContent = "Sign In";
     }
   }
-
-  window.handleLogin = handleLogin;
 </script>
 </body>
 </html>

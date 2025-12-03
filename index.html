@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>SummitDigital CRM</title>
+  <title>WatchmakerCRM</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -193,6 +193,379 @@
     .logout-btn:hover {
       background: var(--dark-gray);
       border-color: var(--medium-gray);
+    }
+
+    /* ===== PROFILE PAGE ===== */
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .profile-card {
+      background: var(--white);
+      padding: 28px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+    }
+
+    .profile-card-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--black);
+      margin-bottom: 8px;
+    }
+
+    .profile-card-subtitle {
+      font-size: 13px;
+      color: var(--medium-gray);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .profile-message {
+      margin-top: 16px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      display: none;
+    }
+
+    .profile-message.success {
+      display: block;
+      background: var(--green-light);
+      color: var(--green);
+    }
+
+    .profile-message.error {
+      display: block;
+      background: var(--red-light);
+      color: var(--red);
+    }
+
+    /* Color Picker */
+    .color-picker-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+
+    .color-option {
+      aspect-ratio: 1;
+      border-radius: 12px;
+      cursor: pointer;
+      border: 3px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .color-option:hover {
+      transform: scale(1.1);
+    }
+
+    .color-option.selected {
+      border-color: var(--black);
+      box-shadow: 0 0 0 3px var(--yellow);
+    }
+
+    .color-option.taken {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .color-option.taken::after {
+      content: '✓';
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .color-option .color-tooltip {
+      position: absolute;
+      bottom: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: var(--medium-gray);
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .color-option:hover .color-tooltip {
+      opacity: 1;
+    }
+
+    /* Team Members Grid */
+    .team-members-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .team-member-card {
+      background: var(--white);
+      padding: 20px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .team-member-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: white;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .team-member-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .team-member-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--black);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .team-member-email {
+      font-size: 12px;
+      color: var(--medium-gray);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Assigned User Badge */
+    .assigned-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      background: var(--off-white);
+    }
+
+    .assigned-badge .user-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    /* Task Comments */
+    .task-comments-section {
+      margin-top: 24px;
+      border-top: 1px solid var(--light-gray);
+      padding-top: 20px;
+    }
+
+    .task-comments-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--black);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .task-comments-title .comment-count {
+      background: var(--light-gray);
+      color: var(--dark-gray);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .task-comments-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 250px;
+      overflow-y: auto;
+      margin-bottom: 16px;
+      padding-right: 4px;
+    }
+
+    .task-comments-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .task-comments-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .task-comments-list::-webkit-scrollbar-thumb {
+      background: var(--light-gray);
+      border-radius: 3px;
+    }
+
+    .task-comment {
+      display: flex;
+      gap: 12px;
+      padding: 14px;
+      background: var(--off-white);
+      border-radius: var(--radius);
+      animation: slideIn 0.3s ease-out;
+      transition: all 0.2s;
+    }
+
+    .task-comment:hover {
+      background: #ECECEC;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .task-comment-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: white;
+      font-size: 13px;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .task-comment-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .task-comment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .task-comment-author {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--black);
+    }
+
+    .task-comment-time {
+      font-size: 11px;
+      color: var(--medium-gray);
+    }
+
+    .task-comment-text {
+      font-size: 13px;
+      color: var(--dark-gray);
+      line-height: 1.5;
+      word-wrap: break-word;
+    }
+
+    .task-comment-input-row {
+      display: flex;
+      gap: 10px;
+      background: var(--off-white);
+      padding: 12px;
+      border-radius: var(--radius);
+      align-items: center;
+    }
+
+    .task-comment-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 24px;
+      font-size: 13px;
+      font-family: inherit;
+      background: var(--white);
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    .task-comment-input:focus {
+      outline: none;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.06), 0 0 0 2px var(--yellow);
+    }
+
+    .task-comment-input::placeholder {
+      color: var(--medium-gray);
+    }
+
+    .task-comment-btn {
+      padding: 12px 20px;
+      background: var(--yellow);
+      color: var(--black);
+      border: none;
+      border-radius: 24px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .task-comment-btn:hover {
+      background: var(--yellow-hover);
+      transform: scale(1.02);
+    }
+
+    .task-comment-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .task-comment-btn .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid transparent;
+      border-top-color: var(--black);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .no-comments {
+      text-align: center;
+      padding: 32px 20px;
+      color: var(--medium-gray);
+      font-size: 14px;
+      background: var(--off-white);
+      border-radius: var(--radius);
+    }
+
+    .no-comments-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+      opacity: 0.5;
     }
 
     /* ===== MAIN CONTENT ===== */
@@ -1299,7 +1672,7 @@
 
   <!-- ===== SIDEBAR ===== -->
   <aside class="sidebar">
-    <div class="sidebar-logo">Summit<span>Digital</span></div>
+    <div class="sidebar-logo">Watchmaker<span>CRM</span></div>
 
     <div class="sidebar-section">
       <div class="sidebar-section-title">Main</div>
@@ -1324,7 +1697,7 @@
         </button>
         <button class="sidebar-link" onclick="showPage('kanban')">
           <span class="sidebar-link-icon">📋</span>
-          <span>Kanban Board</span>
+          <span>Progress Board</span>
         </button>
         <button class="sidebar-link" onclick="showPage('reports')">
           <span class="sidebar-link-icon">📈</span>
@@ -1343,6 +1716,16 @@
         <button class="sidebar-link" onclick="showPage('clients')">
           <span class="sidebar-link-icon">📊</span>
           <span>Client Invoices</span>
+        </button>
+      </nav>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Account</div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-link" onclick="showPage('profile')">
+          <span class="sidebar-link-icon">👤</span>
+          <span>Profile</span>
         </button>
       </nav>
     </div>
@@ -1617,6 +2000,7 @@
             <option value="Scuttlebutt">Scuttlebutt</option>
             <option value="Bayside">Bayside</option>
             <option value="Hunts">Hunts</option>
+            <option value="Emerald City Smoothie">Emerald City Smoothie</option>
           </select>
           <select class="filter-select" id="filterPriority" onchange="loadTasks()">
             <option value="">All Priorities</option>
@@ -1657,16 +2041,16 @@
       </div>
     </div>
 
-    <!-- ===== PAGE: KANBAN ===== -->
+    <!-- ===== PAGE: KANBAN (Progress Board) ===== -->
     <div id="page-kanban" class="page hidden">
       <header class="header">
-        <div class="header-title">Kanban Board</div>
+        <div class="header-title">Progress Board</div>
         <div class="header-actions">
           <button class="btn btn-primary" onclick="openTaskModal()">+ New Task</button>
         </div>
       </header>
       <div class="container">
-        <h1 class="page-title">Kanban Board</h1>
+        <h1 class="page-title">Progress Board</h1>
         <p class="page-subtitle">Drag and drop tasks to update their status</p>
 
         <div class="kanban-board" id="kanbanBoard">
@@ -1756,6 +2140,52 @@
       </div>
     </div>
 
+    <!-- ===== PAGE: PROFILE ===== -->
+    <div id="page-profile" class="page hidden">
+      <header class="header">
+        <div class="header-title">Profile Settings</div>
+      </header>
+      <div class="container">
+        <h1 class="page-title">Your Profile</h1>
+        <p class="page-subtitle">Manage your account settings and appearance</p>
+
+        <div class="profile-grid">
+          <!-- Profile Info Card -->
+          <div class="profile-card">
+            <h3 class="profile-card-title">Profile Information</h3>
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input type="email" class="form-input" id="profileEmail" disabled>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Display Name</label>
+              <input type="text" class="form-input" id="profileDisplayName" placeholder="Your name">
+            </div>
+            <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+            <div id="profileMessage" class="profile-message"></div>
+          </div>
+
+          <!-- Color Selection Card -->
+          <div class="profile-card">
+            <h3 class="profile-card-title">Your Color</h3>
+            <p class="profile-card-subtitle">Choose a color that will appear next to your name when assigned to tasks. Once chosen, this color is reserved for you.</p>
+            <div class="color-picker-grid" id="colorPickerGrid">
+              <!-- JS will populate -->
+            </div>
+            <div id="colorMessage" class="profile-message"></div>
+          </div>
+        </div>
+
+        <!-- Team Colors Preview -->
+        <section class="section">
+          <h2 class="section-title">Team Members</h2>
+          <div class="team-members-grid" id="teamMembersGrid">
+            <!-- JS will populate -->
+          </div>
+        </section>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -1800,10 +2230,6 @@
         <input type="date" class="form-input" id="taskDueDate">
       </div>
       <div class="form-group">
-        <label class="form-label">Assigned To</label>
-        <input type="text" class="form-input" id="taskAssignedTo">
-      </div>
-      <div class="form-group">
         <label class="form-label">Client</label>
         <select class="form-select" id="taskClient">
           <option value="">— No Client —</option>
@@ -1814,6 +2240,14 @@
           <option value="Scuttlebutt">Scuttlebutt</option>
           <option value="Bayside">Bayside</option>
           <option value="Hunts">Hunts</option>
+          <option value="Emerald City Smoothie">Emerald City Smoothie</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Assign To</label>
+        <select class="form-select" id="taskAssignedTo">
+          <option value="">— Unassigned —</option>
+          <!-- JS will populate with team members -->
         </select>
       </div>
     </div>
@@ -1855,6 +2289,22 @@
           <div class="task-detail-value" id="taskDetailCreated">—</div>
         </div>
       </div>
+
+      <!-- Comments Section -->
+      <div class="task-comments-section">
+        <div class="task-comments-title">
+          💬 Comments <span class="comment-count" id="commentCount">0</span>
+        </div>
+        <div class="task-comments-list" id="taskCommentsList">
+          <!-- JS will populate -->
+        </div>
+        <div class="task-comment-input-row">
+          <input type="text" class="task-comment-input" id="taskCommentInput" placeholder="Write a comment...">
+          <button class="task-comment-btn" id="postCommentBtn" onclick="addTaskComment()">
+            <span id="postCommentText">Post</span>
+          </button>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeTaskDetailModal()">Close</button>
@@ -1891,6 +2341,7 @@
           <option value="Scuttlebutt">Scuttlebutt</option>
           <option value="Bayside">Bayside</option>
           <option value="Hunts">Hunts</option>
+          <option value="Emerald City Smoothie">Emerald City Smoothie</option>
         </select>
       </div>
     </div>
@@ -1944,7 +2395,10 @@
       </div>
       <div class="form-group">
         <label class="form-label">Assigned To</label>
-        <input type="text" class="form-input" id="projectTaskAssignedTo">
+        <select class="form-select" id="projectTaskAssignedTo">
+          <option value="">— Unassigned —</option>
+          <!-- JS will populate with team members -->
+        </select>
       </div>
     </div>
     <div class="modal-footer">
@@ -2014,14 +2468,33 @@ const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const supabaseAuth = window.supabase.createClient(SUPABASE_BASE_URL, ANON_KEY);
 
 const CLIENTS = [
-  { name: "Warrior Injury Law", filter: "Warrior" },
-  { name: "Haselwood Auto Group", filter: "Haselwood" },
-  { name: "Core Contractors", filter: "Core" },
-  { name: "Bob Oates", filter: "Bob Oates" },
-  { name: "Scuttlebutt", filter: "Scuttlebutt" },
-  { name: "Bayside", filter: "Bayside" },
-  { name: "Hunts", filter: "Hunt" }
+  { name: "Warrior Injury Law", filter: "Warrior", hasInvoices: true },
+  { name: "Haselwood Auto Group", filter: "Haselwood", hasInvoices: true },
+  { name: "Core Contractors", filter: "Core", hasInvoices: true },
+  { name: "Bob Oates", filter: "Bob Oates", hasInvoices: true },
+  { name: "Scuttlebutt", filter: "Scuttlebutt", hasInvoices: true },
+  { name: "Bayside", filter: "Bayside", hasInvoices: true },
+  { name: "Hunts", filter: "Hunt", hasInvoices: true },
+  { name: "Emerald City Smoothie", filter: "Emerald", hasInvoices: false }
 ];
+
+// 10 user colors available for profiles
+const USER_COLORS = [
+  { id: "coral", name: "Coral", hex: "#FF6B6B" },
+  { id: "orange", name: "Orange", hex: "#FF9F43" },
+  { id: "gold", name: "Gold", hex: "#FECA57" },
+  { id: "lime", name: "Lime", hex: "#1DD1A1" },
+  { id: "teal", name: "Teal", hex: "#00D2D3" },
+  { id: "sky", name: "Sky Blue", hex: "#54A0FF" },
+  { id: "purple", name: "Purple", hex: "#5F27CD" },
+  { id: "pink", name: "Pink", hex: "#FF6B81" },
+  { id: "slate", name: "Slate", hex: "#576574" },
+  { id: "indigo", name: "Indigo", hex: "#341F97" }
+];
+
+// Current user profile data
+let currentUserProfile = null;
+let allUserProfiles = [];
 
 // Helper: determine if an invoice is from Lamar (exclude from 15% calc)
 function isLamarInvoice(inv) {
@@ -2071,6 +2544,8 @@ function showPage(pageName) {
     loadKanban();
   } else if (pageName === 'reports') {
     loadReports();
+  } else if (pageName === 'profile') {
+    loadProfile();
   }
 }
 
@@ -2081,24 +2556,38 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Session Guard - Check if user is logged in
   const { data: { session } } = await supabaseAuth.auth.getSession();
   
-    if (!session) {
+  if (!session) {
     // Not logged in - redirect to login page
     window.location.href = "login.html";
     return;
   }
   
-  // User is logged in - display user info
+  // Store current user session
+  window.currentSession = session;
+  
+  // Load all user profiles (for colors and team display)
+  await loadAllUserProfiles();
+  
+  // User is logged in - display user info with color
   const userEmail = session.user.email || "User";
   const displayName = session.user.user_metadata?.display_name || userEmail;
   const userInitial = displayName.charAt(0).toUpperCase();
   
+  // Get user's color from profile
+  const userProfile = allUserProfiles.find(p => p.id === session.user.id);
+  const userColor = userProfile?.color ? USER_COLORS.find(c => c.id === userProfile.color)?.hex : '#6B6B6B';
+  
   document.getElementById("userAvatar").textContent = userInitial;
+  document.getElementById("userAvatar").style.background = userColor;
   document.getElementById("userEmail").textContent = displayName;
   document.getElementById("userEmail").title = userEmail; // Show email on hover
   
   // Initialize dashboard
   renderClientGrid();
   loadDashboardStats();
+  
+  // Populate assigned to dropdowns
+  populateAssignedToDropdowns();
 });
 
 /* ================================
@@ -2287,7 +2776,7 @@ function renderProjectKanban() {
                   <span class="badge badge-${task.status}">${task.status?.replace('_', ' ')}</span>
                   ${task.due_date ? `<span class="project-task-due ${isOverdue ? 'overdue' : ''}">${task.due_date}</span>` : ''}
                 </div>
-                ${task.assigned_to ? `<div class="project-task-assignee">👤 ${task.assigned_to}</div>` : ''}
+                ${task.assigned_to ? `<div class="project-task-assignee">${renderAssignedBadge(task.assigned_to)}</div>` : ''}
               </div>
             `;
           }).join("")}
@@ -2712,7 +3201,9 @@ async function loadRevenueKPIs() {
 ================================ */
 function renderClientInvoicesGrid() {
   const grid = document.getElementById("clientInvoicesGrid");
-  grid.innerHTML = CLIENTS.map(c => `
+  // Only show clients that have invoices
+  const invoiceClients = CLIENTS.filter(c => c.hasInvoices !== false);
+  grid.innerHTML = invoiceClients.map(c => `
     <div class="client-card" onclick="openClient('${c.name}', '${c.filter}')">
       <div class="client-card-icon">${c.name.charAt(0)}</div>
       <div class="client-card-name">${c.name}</div>
@@ -2933,7 +3424,7 @@ function renderTasksTable(tasks) {
       <td><span class="badge badge-${t.priority}">${t.priority}</span></td>
       <td><span class="badge badge-${t.status}">${t.status?.replace('_', ' ')}</span></td>
       <td>${t.due_date || '—'}</td>
-      <td>${t.assigned_to || '—'}</td>
+      <td>${renderAssignedBadge(t.assigned_to)}</td>
       <td>${t.category || '—'}</td>
       <td>
         <button class="action-btn edit" onclick="event.stopPropagation(); editTask('${t.id}')">Edit</button>
@@ -2977,7 +3468,7 @@ function renderClientTasksTable(tasks) {
       <td><span class="badge badge-${t.priority}">${t.priority}</span></td>
       <td><span class="badge badge-${t.status}">${t.status?.replace('_', ' ')}</span></td>
       <td>${t.due_date || '—'}</td>
-      <td>${t.assigned_to || '—'}</td>
+      <td>${renderAssignedBadge(t.assigned_to)}</td>
       <td>
         <button class="action-btn edit" onclick="event.stopPropagation(); editTask('${t.id}')">Edit</button>
         <button class="action-btn delete" onclick="event.stopPropagation(); deleteTask('${t.id}')">Delete</button>
@@ -3105,7 +3596,7 @@ function editTask(id) {
 ================================ */
 let currentDetailTaskId = null;
 
-function openTaskDetail(taskId) {
+async function openTaskDetail(taskId) {
   const task = allTasks.find(t => t.id === taskId);
   if (!task) return;
 
@@ -3132,7 +3623,7 @@ function openTaskDetail(taskId) {
 
   // Set other fields
   document.getElementById("taskDetailDueDate").textContent = task.due_date || "Not set";
-  document.getElementById("taskDetailAssignedTo").textContent = task.assigned_to || "Unassigned";
+  document.getElementById("taskDetailAssignedTo").innerHTML = renderAssignedBadge(task.assigned_to);
   document.getElementById("taskDetailClient").textContent = task.category || "No client";
   
   // Format created date
@@ -3148,6 +3639,10 @@ function openTaskDetail(taskId) {
   } else {
     document.getElementById("taskDetailCreated").textContent = "—";
   }
+
+  // Load and render comments
+  const comments = await loadTaskComments(taskId);
+  renderTaskComments(comments);
 
   // Show modal
   document.getElementById("taskDetailModal").classList.add("active");
@@ -3237,6 +3732,7 @@ function renderKanban(tasks) {
           <span class="badge badge-${t.priority}">${t.priority}</span>
           <span class="kanban-card-due">${t.due_date || ''}</span>
         </div>
+        ${t.assigned_to ? `<div style="margin-top:8px;">${renderAssignedBadge(t.assigned_to)}</div>` : ''}
       </div>
     `).join("");
   });
@@ -3515,6 +4011,430 @@ async function saveInvoiceToSupabase(invoice) {
 
   console.log("Invoice saved to Supabase");
 }
+
+/* ================================
+   USER PROFILES & COLORS
+================================ */
+async function loadAllUserProfiles() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/profiles?select=*`, {
+      headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+    });
+    
+    if (res.ok) {
+      allUserProfiles = await res.json();
+    } else {
+      allUserProfiles = [];
+    }
+  } catch (err) {
+    console.error("Error loading profiles:", err);
+    allUserProfiles = [];
+  }
+}
+
+function populateAssignedToDropdowns() {
+  const dropdowns = document.querySelectorAll('#taskAssignedTo, #projectTaskAssignedTo');
+  
+  dropdowns.forEach(dropdown => {
+    // Keep the first "Unassigned" option
+    const firstOption = dropdown.querySelector('option');
+    dropdown.innerHTML = '';
+    dropdown.appendChild(firstOption);
+    
+    // Add team members
+    allUserProfiles.forEach(profile => {
+      const option = document.createElement('option');
+      option.value = profile.display_name || profile.email;
+      option.textContent = profile.display_name || profile.email;
+      dropdown.appendChild(option);
+    });
+  });
+}
+
+function getUserColor(assignedTo) {
+  if (!assignedTo) return null;
+  const profile = allUserProfiles.find(p => 
+    p.display_name === assignedTo || p.email === assignedTo
+  );
+  if (profile?.color) {
+    return USER_COLORS.find(c => c.id === profile.color)?.hex || null;
+  }
+  return null;
+}
+
+function renderAssignedBadge(assignedTo) {
+  if (!assignedTo) return '<span class="assigned-badge">Unassigned</span>';
+  
+  const color = getUserColor(assignedTo);
+  if (color) {
+    return `<span class="assigned-badge">
+      <span class="user-dot" style="background: ${color}"></span>
+      ${assignedTo}
+    </span>`;
+  }
+  return `<span class="assigned-badge">${assignedTo}</span>`;
+}
+
+/* ================================
+   PROFILE PAGE
+================================ */
+async function loadProfile() {
+  if (!window.currentSession) return;
+  
+  const user = window.currentSession.user;
+  const userEmail = user.email || "";
+  const displayName = user.user_metadata?.display_name || userEmail;
+  
+  document.getElementById("profileEmail").value = userEmail;
+  document.getElementById("profileDisplayName").value = displayName;
+  
+  // Get current user's profile
+  currentUserProfile = allUserProfiles.find(p => p.id === user.id) || null;
+  
+  // Render color picker
+  renderColorPicker();
+  
+  // Render team members
+  renderTeamMembers();
+}
+
+function renderColorPicker() {
+  const grid = document.getElementById("colorPickerGrid");
+  const currentUserId = window.currentSession?.user?.id;
+  const currentColor = currentUserProfile?.color;
+  
+  // Find which colors are taken by other users
+  const takenColors = allUserProfiles
+    .filter(p => p.id !== currentUserId && p.color)
+    .map(p => p.color);
+  
+  grid.innerHTML = USER_COLORS.map(color => {
+    const isTaken = takenColors.includes(color.id);
+    const isSelected = currentColor === color.id;
+    
+    let classes = 'color-option';
+    if (isTaken) classes += ' taken';
+    if (isSelected) classes += ' selected';
+    
+    return `
+      <div class="${classes}" 
+           style="background: ${color.hex}"
+           onclick="${isTaken ? '' : `selectColor('${color.id}')`}"
+           title="${isTaken ? 'Taken by another user' : color.name}">
+        <span class="color-tooltip">${color.name}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+async function selectColor(colorId) {
+  if (!window.currentSession) return;
+  
+  const userId = window.currentSession.user.id;
+  const msg = document.getElementById("colorMessage");
+  
+  try {
+    // Update profile with new color
+    const res = await fetch(`${SUPABASE_URL}/profiles?id=eq.${userId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: ANON_KEY,
+        Authorization: "Bearer " + ANON_KEY,
+        Prefer: "return=representation"
+      },
+      body: JSON.stringify({ color: colorId })
+    });
+    
+    if (!res.ok) {
+      // If profile doesn't exist, create it
+      const createRes = await fetch(`${SUPABASE_URL}/profiles`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: ANON_KEY,
+          Authorization: "Bearer " + ANON_KEY,
+          Prefer: "return=representation"
+        },
+        body: JSON.stringify({
+          id: userId,
+          display_name: window.currentSession.user.user_metadata?.display_name || window.currentSession.user.email,
+          email: window.currentSession.user.email,
+          color: colorId
+        })
+      });
+      
+      if (!createRes.ok) throw new Error("Failed to save color");
+    }
+    
+    // Reload profiles and re-render
+    await loadAllUserProfiles();
+    currentUserProfile = allUserProfiles.find(p => p.id === userId);
+    renderColorPicker();
+    renderTeamMembers();
+    
+    // Update sidebar avatar color
+    const userColor = USER_COLORS.find(c => c.id === colorId)?.hex || '#6B6B6B';
+    document.getElementById("userAvatar").style.background = userColor;
+    
+    msg.className = "profile-message success";
+    msg.textContent = "✓ Color saved!";
+    setTimeout(() => { msg.style.display = 'none'; }, 2000);
+    
+  } catch (err) {
+    msg.className = "profile-message error";
+    msg.textContent = "Failed to save color: " + err.message;
+  }
+}
+
+async function saveProfile() {
+  if (!window.currentSession) return;
+  
+  const userId = window.currentSession.user.id;
+  const displayName = document.getElementById("profileDisplayName").value.trim();
+  const msg = document.getElementById("profileMessage");
+  
+  if (!displayName) {
+    msg.className = "profile-message error";
+    msg.textContent = "Display name is required.";
+    return;
+  }
+  
+  try {
+    // Update auth user metadata
+    await supabaseAuth.auth.updateUser({
+      data: { display_name: displayName }
+    });
+    
+    // Update profile table
+    const res = await fetch(`${SUPABASE_URL}/profiles?id=eq.${userId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: ANON_KEY,
+        Authorization: "Bearer " + ANON_KEY
+      },
+      body: JSON.stringify({ display_name: displayName })
+    });
+    
+    if (!res.ok) {
+      // Create profile if doesn't exist
+      await fetch(`${SUPABASE_URL}/profiles`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: ANON_KEY,
+          Authorization: "Bearer " + ANON_KEY
+        },
+        body: JSON.stringify({
+          id: userId,
+          display_name: displayName,
+          email: window.currentSession.user.email
+        })
+      });
+    }
+    
+    // Update sidebar
+    document.getElementById("userEmail").textContent = displayName;
+    document.getElementById("userAvatar").textContent = displayName.charAt(0).toUpperCase();
+    
+    // Reload profiles
+    await loadAllUserProfiles();
+    renderTeamMembers();
+    populateAssignedToDropdowns();
+    
+    msg.className = "profile-message success";
+    msg.textContent = "✓ Profile saved!";
+    
+  } catch (err) {
+    msg.className = "profile-message error";
+    msg.textContent = "Failed to save: " + err.message;
+  }
+}
+
+function renderTeamMembers() {
+  const grid = document.getElementById("teamMembersGrid");
+  
+  if (!allUserProfiles.length) {
+    grid.innerHTML = '<p style="color: var(--medium-gray);">No team members yet.</p>';
+    return;
+  }
+  
+  grid.innerHTML = allUserProfiles.map(profile => {
+    const color = profile.color ? USER_COLORS.find(c => c.id === profile.color)?.hex : '#6B6B6B';
+    const initial = (profile.display_name || profile.email || '?').charAt(0).toUpperCase();
+    const isCurrentUser = profile.id === window.currentSession?.user?.id;
+    
+    return `
+      <div class="team-member-card" ${isCurrentUser ? 'style="border: 2px solid var(--yellow);"' : ''}>
+        <div class="team-member-avatar" style="background: ${color}">${initial}</div>
+        <div class="team-member-info">
+          <div class="team-member-name">${profile.display_name || 'Unnamed'} ${isCurrentUser ? '(You)' : ''}</div>
+          <div class="team-member-email">${profile.email || ''}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ================================
+   TASK COMMENTS
+================================ */
+async function loadTaskComments(taskId) {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/task_comments?task_id=eq.${taskId}&order=created_at.asc`, {
+      headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+    });
+    
+    if (res.ok) {
+      return await res.json();
+    }
+    return [];
+  } catch (err) {
+    console.error("Error loading comments:", err);
+    return [];
+  }
+}
+
+function renderTaskComments(comments) {
+  const container = document.getElementById("taskCommentsList");
+  const countEl = document.getElementById("commentCount");
+  
+  // Update comment count
+  countEl.textContent = comments.length;
+  
+  if (!comments.length) {
+    container.innerHTML = `
+      <div class="no-comments">
+        <div class="no-comments-icon">💬</div>
+        No comments yet. Be the first to share your thoughts!
+      </div>
+    `;
+    return;
+  }
+  
+  container.innerHTML = comments.map(comment => {
+    const color = comment.user_color ? USER_COLORS.find(c => c.id === comment.user_color)?.hex : '#6B6B6B';
+    const initial = (comment.user_name || '?').charAt(0).toUpperCase();
+    const time = formatCommentTime(comment.created_at);
+    
+    return `
+      <div class="task-comment">
+        <div class="task-comment-avatar" style="background: ${color}">${initial}</div>
+        <div class="task-comment-content">
+          <div class="task-comment-header">
+            <span class="task-comment-author">${escapeHtml(comment.user_name || 'Unknown')}</span>
+            <span class="task-comment-time">${time}</span>
+          </div>
+          <div class="task-comment-text">${escapeHtml(comment.content)}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  // Smooth scroll to bottom
+  setTimeout(() => {
+    container.scrollTop = container.scrollHeight;
+  }, 100);
+}
+
+// Helper to format comment time nicely
+function formatCommentTime(dateStr) {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric'
+  });
+}
+
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+async function addTaskComment() {
+  if (!currentDetailTaskId || !window.currentSession) return;
+  
+  const input = document.getElementById("taskCommentInput");
+  const btn = document.getElementById("postCommentBtn");
+  const btnText = document.getElementById("postCommentText");
+  const content = input.value.trim();
+  
+  if (!content) return;
+  
+  const user = window.currentSession.user;
+  const userName = user.user_metadata?.display_name || user.email;
+  const userProfile = allUserProfiles.find(p => p.id === user.id);
+  const userColor = userProfile?.color || null;
+  
+  // Show loading state
+  btn.disabled = true;
+  btnText.innerHTML = '<span class="spinner"></span>';
+  
+  try {
+    const res = await fetch(`${SUPABASE_URL}/task_comments`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: ANON_KEY,
+        Authorization: "Bearer " + ANON_KEY,
+        Prefer: "return=representation"
+      },
+      body: JSON.stringify({
+        task_id: currentDetailTaskId,
+        user_id: user.id,
+        user_name: userName,
+        user_color: userColor,
+        content: content
+      })
+    });
+    
+    if (!res.ok) throw new Error("Failed to add comment");
+    
+    // Clear input with smooth effect
+    input.value = "";
+    
+    // Reload comments
+    const comments = await loadTaskComments(currentDetailTaskId);
+    renderTaskComments(comments);
+    
+    // Focus back on input for quick follow-up
+    input.focus();
+    
+  } catch (err) {
+    console.error("Error adding comment:", err);
+    // Show error briefly
+    btnText.textContent = '❌';
+    setTimeout(() => {
+      btnText.textContent = 'Post';
+    }, 1500);
+  } finally {
+    // Reset button state
+    btn.disabled = false;
+    btnText.textContent = 'Post';
+  }
+}
+
+// Handle Enter key in comment input
+document.addEventListener('keydown', function(e) {
+  if (e.target.id === 'taskCommentInput' && e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    addTaskComment();
+  }
+});
 </script>
 </body>
 </html>
