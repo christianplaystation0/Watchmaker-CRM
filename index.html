@@ -1,0 +1,3520 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SummitDigital CRM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Supabase Auth -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --yellow: #FFD60A;
+      --yellow-hover: #E6C009;
+      --black: #1A1A1A;
+      --dark-gray: #2D2D2D;
+      --medium-gray: #6B6B6B;
+      --light-gray: #E8E8E8;
+      --off-white: #F5F5F5;
+      --white: #FFFFFF;
+      --purple: #8B5CF6;
+      --purple-light: #EDE9FE;
+      --green: #22C55E;
+      --green-light: #DCFCE7;
+      --red: #EF4444;
+      --red-light: #FEE2E2;
+      --orange: #F97316;
+      --orange-light: #FFEDD5;
+      --blue: #3B82F6;
+      --blue-light: #DBEAFE;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08);
+      --shadow-hover: 0 8px 30px rgba(0,0,0,0.12);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--off-white);
+      color: var(--black);
+      min-height: 100vh;
+    }
+
+    .hidden { display: none !important; }
+
+    /* ===== LAYOUT WITH SIDEBAR ===== */
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: 260px;
+      background: var(--black);
+      padding: 24px 0;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .sidebar-logo {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--white);
+      padding: 0 24px 24px;
+      border-bottom: 1px solid var(--dark-gray);
+      margin-bottom: 24px;
+    }
+
+    .sidebar-logo span {
+      color: var(--yellow);
+    }
+
+    .sidebar-section {
+      margin-bottom: 24px;
+    }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--medium-gray);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 0 24px;
+      margin-bottom: 12px;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 24px;
+      color: var(--white);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      opacity: 0.7;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+      background: none;
+      text-align: left;
+      width: 100%;
+    }
+
+    .sidebar-link:hover {
+      opacity: 1;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .sidebar-link.active {
+      opacity: 1;
+      background: rgba(255,255,255,0.1);
+      border-left: 3px solid var(--yellow);
+    }
+
+    .sidebar-link-icon {
+      font-size: 18px;
+    }
+
+    /* User Info Section */
+    .sidebar-user {
+      margin-top: auto;
+      padding: 20px 24px;
+      border-top: 1px solid var(--dark-gray);
+    }
+
+    .sidebar-user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .sidebar-user-avatar {
+      width: 36px;
+      height: 36px;
+      background: var(--yellow);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: var(--black);
+      font-size: 14px;
+    }
+
+    .sidebar-user-email {
+      font-size: 12px;
+      color: var(--medium-gray);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 160px;
+    }
+
+    .logout-btn {
+      width: 100%;
+      padding: 10px 16px;
+      background: transparent;
+      border: 1px solid var(--dark-gray);
+      border-radius: var(--radius);
+      color: var(--white);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .logout-btn:hover {
+      background: var(--dark-gray);
+      border-color: var(--medium-gray);
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      flex: 1;
+      margin-left: 260px;
+      min-height: 100vh;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      background: var(--white);
+      padding: 20px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--light-gray);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--black);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    /* ===== CONTAINER ===== */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px 48px;
+    }
+
+    /* ===== PAGE TITLE ===== */
+    .page-title {
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--black);
+    }
+
+    .page-subtitle {
+      font-size: 16px;
+      color: var(--medium-gray);
+      margin-bottom: 32px;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--yellow);
+      color: var(--black);
+    }
+
+    .btn-primary:hover {
+      background: var(--yellow-hover);
+    }
+
+    .btn-secondary {
+      background: var(--black);
+      color: var(--white);
+    }
+
+    .btn-secondary:hover {
+      background: var(--dark-gray);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--light-gray);
+      color: var(--dark-gray);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--black);
+      color: var(--black);
+    }
+
+    .btn-danger {
+      background: var(--red);
+      color: var(--white);
+    }
+
+    .btn-danger:hover {
+      background: #DC2626;
+    }
+
+    .btn-sm {
+      padding: 8px 14px;
+      font-size: 13px;
+    }
+
+    /* ===== KPI CARDS ===== */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .kpi-card {
+      background: var(--white);
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .kpi-card.highlight {
+      background: var(--yellow);
+    }
+
+    .kpi-card.purple {
+      background: var(--purple-light);
+    }
+
+    .kpi-card.green {
+      background: var(--green-light);
+    }
+
+    .kpi-card.red {
+      background: var(--red-light);
+    }
+
+    .kpi-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--medium-gray);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .kpi-card.highlight .kpi-label,
+    .kpi-card.purple .kpi-label,
+    .kpi-card.green .kpi-label,
+    .kpi-card.red .kpi-label {
+      color: var(--dark-gray);
+    }
+
+    .kpi-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--black);
+    }
+
+    /* ===== SECTION ===== */
+    .section {
+      margin-bottom: 32px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--black);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title::before {
+      content: '';
+      width: 4px;
+      height: 24px;
+      background: var(--yellow);
+      border-radius: 2px;
+    }
+
+    /* ===== CLIENT GRID ===== */
+    .client-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .client-card {
+      background: var(--white);
+      padding: 24px 20px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 2px solid transparent;
+      text-align: center;
+    }
+
+    .client-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--yellow);
+    }
+
+    .client-card-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--black);
+    }
+
+    .client-card-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--off-white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--dark-gray);
+    }
+
+    /* ===== CHARTS GRID ===== */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .chart-card {
+      background: var(--white);
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+    }
+
+    .chart-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: var(--black);
+    }
+
+    .chart-container {
+      height: 280px;
+      position: relative;
+    }
+
+    /* ===== UPLOAD SECTION ===== */
+    .upload-card {
+      background: var(--white);
+      padding: 32px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .drop-zone {
+      border: 3px dashed var(--light-gray);
+      border-radius: var(--radius);
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--off-white);
+    }
+
+    .drop-zone:hover {
+      border-color: var(--yellow);
+      background: #FFFEF5;
+    }
+
+    .drop-zone-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+
+    .drop-zone-text {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--dark-gray);
+      margin-bottom: 6px;
+    }
+
+    .drop-zone-hint {
+      font-size: 13px;
+      color: var(--medium-gray);
+    }
+
+    #status {
+      margin-top: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--green);
+    }
+
+    /* ===== JSON BOX ===== */
+    .json-card {
+      background: var(--black);
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+    }
+
+    .json-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--medium-gray);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    #rawJson {
+      background: var(--dark-gray);
+      color: #A3E635;
+      padding: 20px;
+      border-radius: var(--radius);
+      font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      height: 160px;
+      overflow: auto;
+      margin: 0;
+    }
+
+    /* ===== BACK BUTTON ===== */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: var(--black);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-bottom: 24px;
+    }
+
+    .back-btn:hover {
+      background: var(--dark-gray);
+    }
+
+    /* ===== TABLES ===== */
+    .table-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      background: var(--black);
+      color: var(--white);
+      padding: 16px 20px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--light-gray);
+      font-size: 14px;
+      color: var(--dark-gray);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: var(--off-white);
+    }
+
+    /* ===== BADGES ===== */
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-low { background: var(--blue-light); color: var(--blue); }
+    .badge-medium { background: var(--green-light); color: var(--green); }
+    .badge-high { background: var(--orange-light); color: var(--orange); }
+    .badge-urgent { background: var(--red-light); color: var(--red); }
+
+    .badge-backlog { background: var(--light-gray); color: var(--medium-gray); }
+    .badge-todo { background: var(--blue-light); color: var(--blue); }
+    .badge-in_progress { background: var(--purple-light); color: var(--purple); }
+    .badge-review { background: var(--orange-light); color: var(--orange); }
+    .badge-done { background: var(--green-light); color: var(--green); }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: translateY(20px);
+      transition: transform 0.2s;
+    }
+
+    .modal-overlay.active .modal {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--light-gray);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--medium-gray);
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .modal-footer {
+      padding: 20px 24px;
+      border-top: 1px solid var(--light-gray);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    /* ===== FORM ===== */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--dark-gray);
+      margin-bottom: 6px;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 2px solid var(--light-gray);
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--yellow);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    /* ===== KANBAN ===== */
+    .kanban-board {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding-bottom: 20px;
+    }
+
+    .kanban-column {
+      min-width: 280px;
+      max-width: 280px;
+      background: var(--off-white);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+    }
+
+    .kanban-column-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .kanban-column-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--dark-gray);
+    }
+
+    .kanban-column-count {
+      background: var(--white);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--medium-gray);
+    }
+
+    .kanban-cards {
+      min-height: 200px;
+    }
+
+    .kanban-card {
+      background: var(--white);
+      padding: 16px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 12px;
+      cursor: grab;
+      transition: all 0.2s;
+    }
+
+    .kanban-card:hover {
+      box-shadow: var(--shadow-hover);
+    }
+
+    .kanban-card.dragging {
+      opacity: 0.5;
+      cursor: grabbing;
+    }
+
+    .kanban-card-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--black);
+      margin-bottom: 10px;
+    }
+
+    .kanban-card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .kanban-card-due {
+      font-size: 12px;
+      color: var(--medium-gray);
+    }
+
+    /* ===== FILTERS ===== */
+    .filters-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .filter-select {
+      padding: 10px 14px;
+      border: 2px solid var(--light-gray);
+      border-radius: var(--radius);
+      font-size: 13px;
+      background: var(--white);
+      cursor: pointer;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--yellow);
+    }
+
+    /* ===== ACTION BUTTONS ===== */
+    .action-btn {
+      background: none;
+      border: none;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 13px;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+
+    .action-btn:hover {
+      background: var(--off-white);
+    }
+
+    .action-btn.edit { color: var(--blue); }
+    .action-btn.delete { color: var(--red); }
+
+    /* ===== PROJECT KANBAN ===== */
+    .projects-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .client-selector {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .client-selector-btn {
+      padding: 12px 20px;
+      border: 2px solid var(--light-gray);
+      border-radius: var(--radius);
+      background: var(--white);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .client-selector-btn:hover {
+      border-color: var(--yellow);
+      background: #FFFEF5;
+    }
+
+    .client-selector-btn.active {
+      border-color: var(--yellow);
+      background: var(--yellow);
+      color: var(--black);
+    }
+
+    .project-kanban-board {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      padding-bottom: 20px;
+      min-height: 500px;
+    }
+
+    .project-column {
+      min-width: 320px;
+      max-width: 320px;
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 300px);
+    }
+
+    .project-column-header {
+      padding: 20px;
+      border-bottom: 3px solid var(--yellow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .project-column-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--black);
+    }
+
+    .project-column-count {
+      background: var(--off-white);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--medium-gray);
+    }
+
+    .project-column-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      min-height: 200px;
+    }
+
+    .project-column-body.drag-over {
+      background: var(--off-white);
+    }
+
+    .project-task-card {
+      background: var(--off-white);
+      padding: 16px;
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      cursor: grab;
+      transition: all 0.2s;
+      border-left: 4px solid transparent;
+    }
+
+    .project-task-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .project-task-card.dragging {
+      opacity: 0.5;
+      cursor: grabbing;
+    }
+
+    .project-task-card.priority-low { border-left-color: var(--blue); }
+    .project-task-card.priority-medium { border-left-color: var(--green); }
+    .project-task-card.priority-high { border-left-color: var(--orange); }
+    .project-task-card.priority-urgent { border-left-color: var(--red); }
+
+    .project-task-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--black);
+      margin-bottom: 10px;
+    }
+
+    .project-task-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .project-task-assignee {
+      font-size: 12px;
+      color: var(--medium-gray);
+    }
+
+    .project-task-due {
+      font-size: 11px;
+      color: var(--medium-gray);
+      background: var(--white);
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .project-task-due.overdue {
+      background: var(--red-light);
+      color: var(--red);
+    }
+
+    .add-task-btn {
+      width: 100%;
+      padding: 12px;
+      background: transparent;
+      border: 2px dashed var(--light-gray);
+      border-radius: var(--radius);
+      color: var(--medium-gray);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+
+    .add-task-btn:hover {
+      border-color: var(--yellow);
+      color: var(--black);
+      background: #FFFEF5;
+    }
+
+    .add-project-column {
+      min-width: 280px;
+      max-width: 280px;
+      background: var(--off-white);
+      border-radius: var(--radius-lg);
+      border: 2px dashed var(--light-gray);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .add-project-column:hover {
+      border-color: var(--yellow);
+      background: #FFFEF5;
+    }
+
+    .add-project-text {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--medium-gray);
+    }
+
+    .project-empty-state {
+      text-align: center;
+      padding: 60px 40px;
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+    }
+
+    .project-empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .project-empty-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--black);
+      margin-bottom: 8px;
+    }
+
+    .project-empty-text {
+      font-size: 14px;
+      color: var(--medium-gray);
+      margin-bottom: 24px;
+    }
+
+    /* Project Actions */
+    .project-column-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .project-action-btn {
+      padding: 6px 10px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--medium-gray);
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .project-action-btn:hover {
+      background: var(--off-white);
+      color: var(--black);
+    }
+
+    .project-action-btn.delete:hover {
+      background: var(--red-light);
+      color: var(--red);
+    }
+
+    /* ===== CLIENT REVENUE ACCORDION ===== */
+    .client-revenue-accordion {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .client-revenue-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .client-revenue-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .client-revenue-header:hover {
+      background: var(--off-white);
+    }
+
+    .client-revenue-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .client-revenue-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--yellow);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--black);
+    }
+
+    .client-revenue-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--black);
+    }
+
+    .client-revenue-summary {
+      font-size: 13px;
+      color: var(--medium-gray);
+      margin-top: 4px;
+    }
+
+    .client-revenue-totals {
+      display: flex;
+      gap: 32px;
+      text-align: right;
+    }
+
+    .client-revenue-total {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .client-revenue-total-label {
+      font-size: 11px;
+      color: var(--medium-gray);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .client-revenue-total-value {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--black);
+    }
+
+    .client-revenue-total-value.highlight {
+      color: var(--yellow);
+      background: var(--black);
+      padding: 4px 12px;
+      border-radius: 6px;
+    }
+
+    .client-revenue-toggle {
+      font-size: 20px;
+      color: var(--medium-gray);
+      transition: transform 0.2s;
+    }
+
+    .client-revenue-card.open .client-revenue-toggle {
+      transform: rotate(180deg);
+    }
+
+    .client-revenue-body {
+      display: none;
+      padding: 0 24px 24px;
+      border-top: 1px solid var(--light-gray);
+    }
+
+    .client-revenue-card.open .client-revenue-body {
+      display: block;
+    }
+
+    .client-revenue-tables {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 20px;
+    }
+
+    .client-revenue-table-section h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--dark-gray);
+      margin-bottom: 12px;
+    }
+
+    .client-revenue-table-section table {
+      font-size: 13px;
+    }
+
+    .client-revenue-table-section th {
+      padding: 12px 16px;
+      font-size: 11px;
+    }
+
+    .client-revenue-table-section td {
+      padding: 12px 16px;
+    }
+
+    @media (max-width: 900px) {
+      .client-revenue-tables {
+        grid-template-columns: 1fr;
+      }
+      
+      .client-revenue-totals {
+        flex-direction: column;
+        gap: 8px;
+      }
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+      .sidebar {
+        width: 80px;
+      }
+
+      .sidebar-logo,
+      .sidebar-section-title,
+      .sidebar-link span {
+        display: none;
+      }
+
+      .sidebar-link {
+        justify-content: center;
+        padding: 16px;
+      }
+
+      .main-content {
+        margin-left: 80px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+
+      .container {
+        padding: 20px;
+      }
+
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .kanban-board {
+        flex-direction: column;
+      }
+
+      .kanban-column {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-layout">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">Summit<span>Digital</span></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Main</div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-link active" onclick="showPage('dashboard')">
+          <span class="sidebar-link-icon">📊</span>
+          <span>Dashboard</span>
+        </button>
+        <button class="sidebar-link" onclick="showPage('projects')">
+          <span class="sidebar-link-icon">📁</span>
+          <span>Client Projects</span>
+        </button>
+      </nav>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Product Management</div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-link" onclick="showPage('tasks')">
+          <span class="sidebar-link-icon">✅</span>
+          <span>Tasks</span>
+        </button>
+        <button class="sidebar-link" onclick="showPage('kanban')">
+          <span class="sidebar-link-icon">📋</span>
+          <span>Kanban Board</span>
+        </button>
+        <button class="sidebar-link" onclick="showPage('reports')">
+          <span class="sidebar-link-icon">📈</span>
+          <span>Reports</span>
+        </button>
+      </nav>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Revenue</div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-link" onclick="showPage('revenue')">
+          <span class="sidebar-link-icon">💰</span>
+          <span>Watchmaker Revenue</span>
+        </button>
+        <button class="sidebar-link" onclick="showPage('clients')">
+          <span class="sidebar-link-icon">📊</span>
+          <span>Client Invoices</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- User Info & Logout -->
+    <div class="sidebar-user">
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-avatar" id="userAvatar">?</div>
+        <div class="sidebar-user-email" id="userEmail">Loading...</div>
+      </div>
+      <button class="logout-btn" onclick="handleLogout()">
+        <span>🚪</span>
+        <span>Sign Out</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content">
+
+    <!-- ===== PAGE: DASHBOARD ===== -->
+    <div id="page-dashboard" class="page">
+      <header class="header">
+        <div class="header-title">Dashboard</div>
+      </header>
+      <div class="container">
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Quick overview of your clients and projects</p>
+
+        <!-- QUICK STATS -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">Total Clients</div>
+            <div class="kpi-value" id="kpiTotalClients">7</div>
+          </div>
+          <div class="kpi-card highlight">
+            <div class="kpi-label">Active Projects</div>
+            <div class="kpi-value" id="kpiActiveProjects">0</div>
+          </div>
+          <div class="kpi-card purple">
+            <div class="kpi-label">Open Tasks</div>
+            <div class="kpi-value" id="kpiOpenTasks">0</div>
+          </div>
+          <div class="kpi-card green">
+            <div class="kpi-label">Completed This Week</div>
+            <div class="kpi-value" id="kpiCompletedWeek">0</div>
+          </div>
+        </div>
+
+        <!-- CLIENTS QUICK ACCESS -->
+        <section class="section">
+          <div class="section-header">
+            <h2 class="section-title">Clients</h2>
+            <button class="btn btn-primary btn-sm" onclick="showPage('projects')">View All Projects →</button>
+          </div>
+          <div class="client-grid" id="clientGrid"></div>
+        </section>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: CLIENT PROJECTS ===== -->
+    <div id="page-projects" class="page hidden">
+      <header class="header">
+        <div class="header-title">Client Projects</div>
+        <div class="header-actions">
+          <button class="btn btn-primary" onclick="openProjectModal()">+ New Project</button>
+        </div>
+      </header>
+      <div class="container">
+        <h1 class="page-title">Client Projects</h1>
+        <p class="page-subtitle">Manage projects and tasks for each client</p>
+
+        <!-- CLIENT SELECTOR -->
+        <div class="client-selector" id="clientSelector">
+          <!-- JS will populate -->
+        </div>
+
+        <!-- PROJECT KANBAN BOARD -->
+        <div class="project-kanban-board" id="projectKanbanBoard">
+          <!-- JS will populate -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: REVENUE (Watchmaker) ===== -->
+    <div id="page-revenue" class="page hidden">
+      <header class="header">
+        <div class="header-title">Watchmaker Revenue</div>
+      </header>
+      <div class="container">
+        <h1 class="page-title">Watchmaker Revenue</h1>
+        <p class="page-subtitle">Overall revenue tracking and analytics</p>
+
+        <!-- KPI CARDS -->
+        <div class="kpi-grid" id="kpiGrid">
+          <div class="kpi-card">
+            <div class="kpi-label">Total Gross Revenue</div>
+            <div class="kpi-value" id="kpiTotalGross">$0</div>
+          </div>
+          <div class="kpi-card highlight">
+            <div class="kpi-label">Watchmaker Revenue (15%)</div>
+            <div class="kpi-value" id="kpiWatchmaker">$0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Total Invoices</div>
+            <div class="kpi-value" id="kpiInvoiceCount">0</div>
+          </div>
+        </div>
+
+        <!-- CHARTS -->
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-title">Monthly Gross Revenue</div>
+            <div class="chart-container">
+              <canvas id="grossChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Watchmaker Revenue (15% of Gross)</div>
+            <div class="chart-container">
+              <canvas id="watchmakerChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: CLIENT INVOICES LIST ===== -->
+    <div id="page-clients" class="page hidden">
+      <header class="header">
+        <div class="header-title">Client Invoices</div>
+      </header>
+      <div class="container">
+        <h1 class="page-title">Client Invoices</h1>
+        <p class="page-subtitle">View client revenue breakdowns and upload invoices</p>
+
+        <!-- CLIENT CARDS -->
+        <section class="section">
+          <div class="section-header">
+            <h2 class="section-title">Select Client</h2>
+          </div>
+          <div class="client-grid" id="clientInvoicesGrid">
+            <!-- JS will populate -->
+          </div>
+        </section>
+
+        <!-- UPLOAD -->
+        <section class="section">
+          <div class="section-header">
+            <h2 class="section-title">Upload Invoice</h2>
+          </div>
+          <div class="upload-card">
+            <div id="drop-zone" class="drop-zone">
+              <div class="drop-zone-icon">📄</div>
+              <div class="drop-zone-text">Drop PDF invoices here</div>
+              <div class="drop-zone-hint">or click to browse files</div>
+            </div>
+            <input id="file-input" type="file" accept="application/pdf" multiple style="display:none;" />
+            <div id="status"></div>
+          </div>
+        </section>
+
+        <!-- JSON OUTPUT -->
+        <section class="section">
+          <div class="json-card">
+            <div class="json-title">Raw JSON Response</div>
+            <pre id="rawJson">// Parsed invoice JSON will appear here.</pre>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: CLIENT DETAIL ===== -->
+    <div id="page-client" class="page hidden">
+      <header class="header">
+        <div class="header-title" id="clientHeaderTitle">Client</div>
+      </header>
+      <div class="container">
+        <button class="back-btn" onclick="showPage('clients')">← Back to Clients</button>
+        <h1 class="page-title" id="clientTitle"></h1>
+        <p class="page-subtitle">Invoice history and revenue breakdown</p>
+
+        <!-- CLIENT KPIs -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">Client Total Gross</div>
+            <div class="kpi-value" id="clientTotalGross">$0</div>
+          </div>
+          <div class="kpi-card highlight">
+            <div class="kpi-label">Watchmaker Revenue (15%)</div>
+            <div class="kpi-value" id="clientWatchmaker">$0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Invoices</div>
+            <div class="kpi-value" id="clientInvoiceCount">0</div>
+          </div>
+        </div>
+
+        <!-- INVOICES TABLE -->
+        <section class="section">
+          <h2 class="section-title">Invoices</h2>
+          <div class="table-card">
+            <div id="clientInvoices"></div>
+          </div>
+        </section>
+
+        <!-- MONTHLY TABLE -->
+        <section class="section">
+          <h2 class="section-title">Monthly Revenue</h2>
+          <div class="table-card">
+            <div id="clientMonthlyTable"></div>
+          </div>
+        </section>
+
+        <!-- CLIENT CHART -->
+        <section class="section">
+          <h2 class="section-title">Revenue Trend</h2>
+          <div class="chart-card">
+            <div class="chart-container">
+              <canvas id="clientChart"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <!-- CLIENT TASKS -->
+        <section class="section">
+          <div class="section-header">
+            <h2 class="section-title">Client Tasks</h2>
+            <button class="btn btn-primary btn-sm" onclick="openTaskModalForClient()">+ New Task</button>
+          </div>
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Due Date</th>
+                  <th>Assigned To</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="clientTasksTableBody">
+                <!-- JS will populate -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: TASKS ===== -->
+    <div id="page-tasks" class="page hidden">
+      <header class="header">
+        <div class="header-title">Product Management — Task List</div>
+        <div class="header-actions">
+          <button class="btn btn-primary" onclick="openTaskModal()">+ New Task</button>
+        </div>
+      </header>
+      <div class="container">
+        <h1 class="page-title">Tasks</h1>
+        <p class="page-subtitle">Manage your product tasks and assignments</p>
+
+        <!-- FILTERS -->
+        <div class="filters-row">
+          <select class="filter-select" id="filterClient" onchange="loadTasks()">
+            <option value="">All Clients</option>
+            <option value="Warrior Injury Law">Warrior Injury Law</option>
+            <option value="Haselwood Auto Group">Haselwood Auto Group</option>
+            <option value="Core Contractors">Core Contractors</option>
+            <option value="Bob Oates">Bob Oates</option>
+            <option value="Scuttlebutt">Scuttlebutt</option>
+            <option value="Bayside">Bayside</option>
+            <option value="Hunts">Hunts</option>
+          </select>
+          <select class="filter-select" id="filterPriority" onchange="loadTasks()">
+            <option value="">All Priorities</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+          <select class="filter-select" id="filterStatus" onchange="loadTasks()">
+            <option value="">All Statuses</option>
+            <option value="backlog">Backlog</option>
+            <option value="todo">To Do</option>
+            <option value="in_progress">In Progress</option>
+            <option value="review">Review</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+
+        <!-- TASKS TABLE -->
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Due Date</th>
+                <th>Assigned To</th>
+                <th>Client</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tasksTableBody">
+              <!-- JS will populate -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: KANBAN ===== -->
+    <div id="page-kanban" class="page hidden">
+      <header class="header">
+        <div class="header-title">Kanban Board</div>
+        <div class="header-actions">
+          <button class="btn btn-primary" onclick="openTaskModal()">+ New Task</button>
+        </div>
+      </header>
+      <div class="container">
+        <h1 class="page-title">Kanban Board</h1>
+        <p class="page-subtitle">Drag and drop tasks to update their status</p>
+
+        <div class="kanban-board" id="kanbanBoard">
+          <div class="kanban-column" data-status="backlog">
+            <div class="kanban-column-header">
+              <span class="kanban-column-title">Backlog</span>
+              <span class="kanban-column-count" id="count-backlog">0</span>
+            </div>
+            <div class="kanban-cards" id="kanban-backlog"></div>
+          </div>
+          <div class="kanban-column" data-status="todo">
+            <div class="kanban-column-header">
+              <span class="kanban-column-title">To Do</span>
+              <span class="kanban-column-count" id="count-todo">0</span>
+            </div>
+            <div class="kanban-cards" id="kanban-todo"></div>
+          </div>
+          <div class="kanban-column" data-status="in_progress">
+            <div class="kanban-column-header">
+              <span class="kanban-column-title">In Progress</span>
+              <span class="kanban-column-count" id="count-in_progress">0</span>
+            </div>
+            <div class="kanban-cards" id="kanban-in_progress"></div>
+          </div>
+          <div class="kanban-column" data-status="review">
+            <div class="kanban-column-header">
+              <span class="kanban-column-title">Review</span>
+              <span class="kanban-column-count" id="count-review">0</span>
+            </div>
+            <div class="kanban-cards" id="kanban-review"></div>
+          </div>
+          <div class="kanban-column" data-status="done">
+            <div class="kanban-column-header">
+              <span class="kanban-column-title">Done</span>
+              <span class="kanban-column-count" id="count-done">0</span>
+            </div>
+            <div class="kanban-cards" id="kanban-done"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: REPORTS ===== -->
+    <div id="page-reports" class="page hidden">
+      <header class="header">
+        <div class="header-title">Reports</div>
+      </header>
+      <div class="container">
+        <h1 class="page-title">Reports</h1>
+        <p class="page-subtitle">Task analytics and performance metrics</p>
+
+        <!-- REPORT KPIs -->
+        <div class="kpi-grid">
+          <div class="kpi-card green">
+            <div class="kpi-label">Completed This Week</div>
+            <div class="kpi-value" id="reportCompletedWeek">0</div>
+          </div>
+          <div class="kpi-card red">
+            <div class="kpi-label">Overdue Tasks</div>
+            <div class="kpi-value" id="reportOverdue">0</div>
+          </div>
+          <div class="kpi-card purple">
+            <div class="kpi-label">High Priority</div>
+            <div class="kpi-value" id="reportHighPriority">0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Total Tasks</div>
+            <div class="kpi-value" id="reportTotal">0</div>
+          </div>
+        </div>
+
+        <!-- REPORT CHARTS -->
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-title">Tasks Completed Per Week</div>
+            <div class="chart-container">
+              <canvas id="tasksPerWeekChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Priority Distribution</div>
+            <div class="chart-container">
+              <canvas id="priorityChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ===== TASK MODAL ===== -->
+<div class="modal-overlay" id="taskModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="taskModalTitle">New Task</h3>
+      <button class="modal-close" onclick="closeTaskModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="taskId">
+      <div class="form-group">
+        <label class="form-label">Title *</label>
+        <input type="text" class="form-input" id="taskTitle" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" id="taskDescription"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Priority</label>
+        <select class="form-select" id="taskPriority">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+          <option value="urgent">Urgent</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-select" id="taskStatus">
+          <option value="backlog">Backlog</option>
+          <option value="todo" selected>To Do</option>
+          <option value="in_progress">In Progress</option>
+          <option value="review">Review</option>
+          <option value="done">Done</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Due Date</label>
+        <input type="date" class="form-input" id="taskDueDate">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Assigned To</label>
+        <input type="text" class="form-input" id="taskAssignedTo">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Client</label>
+        <select class="form-select" id="taskClient">
+          <option value="">— No Client —</option>
+          <option value="Warrior Injury Law">Warrior Injury Law</option>
+          <option value="Haselwood Auto Group">Haselwood Auto Group</option>
+          <option value="Core Contractors">Core Contractors</option>
+          <option value="Bob Oates">Bob Oates</option>
+          <option value="Scuttlebutt">Scuttlebutt</option>
+          <option value="Bayside">Bayside</option>
+          <option value="Hunts">Hunts</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeTaskModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TASK DETAIL MODAL ===== -->
+<div class="modal-overlay" id="taskDetailModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="taskDetailTitle">Task Details</h3>
+      <button class="modal-close" onclick="closeTaskDetailModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="task-detail-badges" id="taskDetailBadges"></div>
+      <div class="task-detail-section">
+        <div class="task-detail-label">Description</div>
+        <div class="task-detail-value" id="taskDetailDescription">No description provided.</div>
+      </div>
+      <div class="task-detail-grid">
+        <div class="task-detail-item">
+          <div class="task-detail-label">Due Date</div>
+          <div class="task-detail-value" id="taskDetailDueDate">—</div>
+        </div>
+        <div class="task-detail-item">
+          <div class="task-detail-label">Assigned To</div>
+          <div class="task-detail-value" id="taskDetailAssignedTo">—</div>
+        </div>
+        <div class="task-detail-item">
+          <div class="task-detail-label">Client</div>
+          <div class="task-detail-value" id="taskDetailClient">—</div>
+        </div>
+        <div class="task-detail-item">
+          <div class="task-detail-label">Created</div>
+          <div class="task-detail-value" id="taskDetailCreated">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeTaskDetailModal()">Close</button>
+      <button class="btn btn-primary" id="taskDetailEditBtn" onclick="editTaskFromDetail()">Edit Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PROJECT MODAL ===== -->
+<div class="modal-overlay" id="projectModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="projectModalTitle">New Project</h3>
+      <button class="modal-close" onclick="closeProjectModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="projectId">
+      <div class="form-group">
+        <label class="form-label">Project Name *</label>
+        <input type="text" class="form-input" id="projectName" placeholder="e.g., Q1 Branding Campaign" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" id="projectDescription" placeholder="Brief description of the project..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Client *</label>
+        <select class="form-select" id="projectClient" required>
+          <option value="">— Select Client —</option>
+          <option value="Warrior Injury Law">Warrior Injury Law</option>
+          <option value="Haselwood Auto Group">Haselwood Auto Group</option>
+          <option value="Core Contractors">Core Contractors</option>
+          <option value="Bob Oates">Bob Oates</option>
+          <option value="Scuttlebutt">Scuttlebutt</option>
+          <option value="Bayside">Bayside</option>
+          <option value="Hunts">Hunts</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeProjectModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProject()">Save Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PROJECT TASK MODAL ===== -->
+<div class="modal-overlay" id="projectTaskModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="projectTaskModalTitle">Add Task to Project</h3>
+      <button class="modal-close" onclick="closeProjectTaskModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="projectTaskId">
+      <input type="hidden" id="projectTaskProjectId">
+      <div class="form-group">
+        <label class="form-label">Title *</label>
+        <input type="text" class="form-input" id="projectTaskTitle" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" id="projectTaskDescription"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Priority</label>
+        <select class="form-select" id="projectTaskPriority">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+          <option value="urgent">Urgent</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-select" id="projectTaskStatus">
+          <option value="backlog">Backlog</option>
+          <option value="todo" selected>To Do</option>
+          <option value="in_progress">In Progress</option>
+          <option value="review">Review</option>
+          <option value="done">Done</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Due Date</label>
+        <input type="date" class="form-input" id="projectTaskDueDate">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Assigned To</label>
+        <input type="text" class="form-input" id="projectTaskAssignedTo">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeProjectTaskModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProjectTask()">Save Task</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .task-detail-badges {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .task-detail-section {
+    margin-bottom: 24px;
+  }
+  .task-detail-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--medium-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .task-detail-value {
+    font-size: 15px;
+    color: var(--black);
+    line-height: 1.6;
+  }
+  .task-detail-value.description {
+    background: var(--off-white);
+    padding: 16px;
+    border-radius: var(--radius);
+    white-space: pre-wrap;
+    min-height: 60px;
+  }
+  .task-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .task-detail-item {
+    background: var(--off-white);
+    padding: 14px 16px;
+    border-radius: var(--radius);
+  }
+  .task-row-clickable {
+    cursor: pointer;
+  }
+  .task-row-clickable:hover td {
+    background: var(--off-white);
+  }
+</style>
+
+<script>
+/* ================================
+   CONFIG
+================================ */
+const FUNCTION_URL = "https://cagajzhridvohsrviwaw.supabase.co/functions/v1/quick-task";
+const SUPABASE_URL = "https://cagajzhridvohsrviwaw.supabase.co/rest/v1";
+const SUPABASE_BASE_URL = "https://cagajzhridvohsrviwaw.supabase.co";
+const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhZ2FqemhyaWR2b2hzcnZpd2F3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyODQ0ODYsImV4cCI6MjA3OTg2MDQ4Nn0.CSZvT7tPgoEyXwUW_wLOzZUfSUPLAZMpbXvvLOn5cNo";
+
+// Initialize Supabase Auth Client
+const supabaseAuth = window.supabase.createClient(SUPABASE_BASE_URL, ANON_KEY);
+
+const CLIENTS = [
+  { name: "Warrior Injury Law", filter: "Warrior" },
+  { name: "Haselwood Auto Group", filter: "Haselwood" },
+  { name: "Core Contractors", filter: "Core" },
+  { name: "Bob Oates", filter: "Bob Oates" },
+  { name: "Scuttlebutt", filter: "Scuttlebutt" },
+  { name: "Bayside", filter: "Bayside" },
+  { name: "Hunts", filter: "Hunt" }
+];
+
+// Helper: determine if an invoice is from Lamar (exclude from 15% calc)
+function isLamarInvoice(inv) {
+  const company = (inv.company_name || "").toLowerCase();
+  const station = (inv.station_name || "").toLowerCase();
+  return company.includes("lamar") || station.includes("lamar");
+}
+
+/* ================================
+   PAGE NAVIGATION
+================================ */
+let currentPage = 'dashboard';
+
+function showPage(pageName) {
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+  
+  // Show target page
+  const targetPage = document.getElementById('page-' + pageName);
+  if (targetPage) {
+    targetPage.classList.remove('hidden');
+  }
+  
+  // Update sidebar active state
+  document.querySelectorAll('.sidebar-link').forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('onclick')?.includes(pageName)) {
+      link.classList.add('active');
+    }
+  });
+  
+  currentPage = pageName;
+  
+  // Load page-specific data
+  if (pageName === 'dashboard') {
+    loadDashboardStats();
+  } else if (pageName === 'projects') {
+    loadProjectsPage();
+  } else if (pageName === 'revenue') {
+    loadRevenueKPIs();
+  } else if (pageName === 'clients') {
+    renderClientInvoicesGrid();
+    setupPdfUpload();
+  } else if (pageName === 'tasks') {
+    loadTasks();
+  } else if (pageName === 'kanban') {
+    loadKanban();
+  } else if (pageName === 'reports') {
+    loadReports();
+  }
+}
+
+/* ================================
+   INIT
+================================ */
+window.addEventListener("DOMContentLoaded", async () => {
+  // Session Guard - Check if user is logged in
+  const { data: { session } } = await supabaseAuth.auth.getSession();
+  
+    if (!session) {
+    // Not logged in - redirect to login page
+    window.location.href = "login.html";
+    return;
+  }
+  
+  // User is logged in - display user info
+  const userEmail = session.user.email || "User";
+  const displayName = session.user.user_metadata?.display_name || userEmail;
+  const userInitial = displayName.charAt(0).toUpperCase();
+  
+  document.getElementById("userAvatar").textContent = userInitial;
+  document.getElementById("userEmail").textContent = displayName;
+  document.getElementById("userEmail").title = userEmail; // Show email on hover
+  
+  // Initialize dashboard
+  renderClientGrid();
+  loadDashboardStats();
+});
+
+/* ================================
+   LOGOUT
+================================ */
+async function handleLogout() {
+  try {
+    await supabaseAuth.auth.signOut();
+    window.location.href = "login.html";
+  } catch (error) {
+    console.error("Logout error:", error);
+    alert("Error signing out. Please try again.");
+  }
+}
+
+function renderClientGrid() {
+  const grid = document.getElementById("clientGrid");
+  grid.innerHTML = CLIENTS.map(c => `
+    <div class="client-card" onclick="openClient('${c.name}', '${c.filter}')">
+      <div class="client-card-icon">${c.name.charAt(0)}</div>
+      <div class="client-card-name">${c.name}</div>
+    </div>
+  `).join("");
+}
+
+/* ================================
+   DASHBOARD STATS
+================================ */
+async function loadDashboardStats() {
+  // Load projects count
+  const projectsRes = await fetch(`${SUPABASE_URL}/projects?select=id`, {
+    headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+  });
+  const projects = projectsRes.ok ? await projectsRes.json() : [];
+  
+  // Load tasks
+  const tasksRes = await fetch(`${SUPABASE_URL}/tasks?select=*`, {
+    headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+  });
+  const tasks = tasksRes.ok ? await tasksRes.json() : [];
+  
+  // Calculate stats
+  const openTasks = tasks.filter(t => t.status !== 'done').length;
+  const today = new Date();
+  const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const completedThisWeek = tasks.filter(t => {
+    if (t.status !== 'done') return false;
+    const updated = new Date(t.updated_at);
+    return updated >= weekAgo;
+  }).length;
+  
+  document.getElementById("kpiTotalClients").textContent = CLIENTS.length;
+  document.getElementById("kpiActiveProjects").textContent = projects.length;
+  document.getElementById("kpiOpenTasks").textContent = openTasks;
+  document.getElementById("kpiCompletedWeek").textContent = completedThisWeek;
+}
+
+function selectClientForProjects(clientName) {
+  selectedClient = clientName;
+  showPage('projects');
+}
+
+/* ================================
+   PROJECTS PAGE
+================================ */
+let selectedClient = null;
+let allProjects = [];
+let projectTasks = {};
+
+async function loadProjectsPage() {
+  renderClientSelector();
+  await loadProjects();
+}
+
+function renderClientSelector() {
+  const selector = document.getElementById("clientSelector");
+  selector.innerHTML = `
+    <button class="client-selector-btn ${!selectedClient ? 'active' : ''}" onclick="filterByClient(null)">
+      All Clients
+    </button>
+    ${CLIENTS.map(c => `
+      <button class="client-selector-btn ${selectedClient === c.name ? 'active' : ''}" onclick="filterByClient('${c.name}')">
+        ${c.name}
+      </button>
+    `).join("")}
+  `;
+}
+
+function filterByClient(clientName) {
+  selectedClient = clientName;
+  renderClientSelector();
+  renderProjectKanban();
+}
+
+async function loadProjects() {
+  let url = `${SUPABASE_URL}/projects?select=*&order=created_at.desc`;
+  if (selectedClient) {
+    url += `&client_name=eq.${encodeURIComponent(selectedClient)}`;
+  }
+  
+  const res = await fetch(url, {
+    headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+  });
+  
+  if (!res.ok) {
+    console.error("Failed to load projects");
+    allProjects = [];
+    renderProjectKanban();
+    return;
+  }
+  
+  allProjects = await res.json();
+  
+  // Load tasks for each project
+  for (const project of allProjects) {
+    await loadProjectTasks(project.id);
+  }
+  
+  renderProjectKanban();
+}
+
+async function loadProjectTasks(projectId) {
+  const res = await fetch(`${SUPABASE_URL}/tasks?select=*&project_id=eq.${projectId}&order=created_at.desc`, {
+    headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+  });
+  
+  if (res.ok) {
+    projectTasks[projectId] = await res.json();
+  } else {
+    projectTasks[projectId] = [];
+  }
+}
+
+function renderProjectKanban() {
+  const board = document.getElementById("projectKanbanBoard");
+  
+  // Filter projects by selected client
+  let displayProjects = selectedClient 
+    ? allProjects.filter(p => p.client_name === selectedClient)
+    : allProjects;
+  
+  if (displayProjects.length === 0) {
+    board.innerHTML = `
+      <div class="project-empty-state">
+        <div class="project-empty-icon">📁</div>
+        <div class="project-empty-title">${selectedClient ? `No projects for ${selectedClient}` : 'No projects yet'}</div>
+        <div class="project-empty-text">Create your first project to start organizing tasks</div>
+        <button class="btn btn-primary" onclick="openProjectModal()">+ Create Project</button>
+      </div>
+    `;
+    return;
+  }
+  
+  board.innerHTML = displayProjects.map(project => {
+    const tasks = projectTasks[project.id] || [];
+    const today = new Date();
+    
+    return `
+      <div class="project-column" data-project-id="${project.id}">
+        <div class="project-column-header">
+          <div>
+            <div class="project-column-title">${project.project_name}</div>
+            <div style="font-size: 11px; color: var(--medium-gray); margin-top: 4px;">${project.client_name}</div>
+          </div>
+          <div class="project-column-actions">
+            <span class="project-column-count">${tasks.length}</span>
+            <button class="project-action-btn delete" onclick="deleteProject('${project.id}')" title="Delete project">🗑️</button>
+          </div>
+        </div>
+        <div class="project-column-body" 
+             data-project-id="${project.id}"
+             ondragover="projectDragOver(event)" 
+             ondrop="projectDrop(event, '${project.id}')"
+             ondragleave="projectDragLeave(event)">
+          ${tasks.map(task => {
+            const isOverdue = task.due_date && new Date(task.due_date) < today && task.status !== 'done';
+            return `
+              <div class="project-task-card priority-${task.priority}" 
+                   draggable="true" 
+                   data-task-id="${task.id}"
+                   ondragstart="projectTaskDragStart(event)"
+                   ondragend="projectTaskDragEnd(event)"
+                   onclick="openProjectTaskForEdit('${task.id}', '${project.id}')">
+                <div class="project-task-title">${task.title}</div>
+                <div class="project-task-meta">
+                  <span class="badge badge-${task.status}">${task.status?.replace('_', ' ')}</span>
+                  ${task.due_date ? `<span class="project-task-due ${isOverdue ? 'overdue' : ''}">${task.due_date}</span>` : ''}
+                </div>
+                ${task.assigned_to ? `<div class="project-task-assignee">👤 ${task.assigned_to}</div>` : ''}
+              </div>
+            `;
+          }).join("")}
+          <button class="add-task-btn" onclick="openProjectTaskModal('${project.id}')">+ Add Task</button>
+        </div>
+      </div>
+    `;
+  }).join("") + `
+    <div class="add-project-column" onclick="openProjectModal()">
+      <div class="add-project-text">+ Add Project</div>
+    </div>
+  `;
+}
+
+/* ================================
+   PROJECT DRAG & DROP
+================================ */
+let draggedTaskId = null;
+let draggedFromProjectId = null;
+
+function projectTaskDragStart(e) {
+  e.target.classList.add('dragging');
+  draggedTaskId = e.target.dataset.taskId;
+  draggedFromProjectId = e.target.closest('.project-column')?.dataset.projectId;
+  e.dataTransfer.setData('text/plain', draggedTaskId);
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function projectTaskDragEnd(e) {
+  e.target.classList.remove('dragging');
+  draggedTaskId = null;
+  draggedFromProjectId = null;
+  document.querySelectorAll('.project-column-body').forEach(col => {
+    col.classList.remove('drag-over');
+  });
+}
+
+function projectDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+
+function projectDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+
+async function projectDrop(e, newProjectId) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  
+  const taskId = e.dataTransfer.getData('text/plain');
+  if (!taskId || !newProjectId) return;
+  
+  // Don't do anything if dropped in same project
+  if (draggedFromProjectId === newProjectId) return;
+  
+  try {
+    // Update task's project_id
+    const res = await fetch(`${SUPABASE_URL}/tasks?id=eq.${taskId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: ANON_KEY,
+        Authorization: "Bearer " + ANON_KEY,
+        Prefer: "return=representation"
+      },
+      body: JSON.stringify({ project_id: newProjectId })
+    });
+    
+    if (!res.ok) {
+      console.error("Failed to move task");
+      return;
+    }
+    
+    // Reload projects
+    await loadProjects();
+  } catch (err) {
+    console.error("Error moving task:", err);
+  }
+}
+
+/* ================================
+   PROJECT MODAL
+================================ */
+function openProjectModal(projectId = null) {
+  const modal = document.getElementById("projectModal");
+  const title = document.getElementById("projectModalTitle");
+  
+  // Reset form
+  document.getElementById("projectId").value = "";
+  document.getElementById("projectName").value = "";
+  document.getElementById("projectDescription").value = "";
+  document.getElementById("projectClient").value = selectedClient || "";
+  
+  if (projectId) {
+    title.textContent = "Edit Project";
+    const project = allProjects.find(p => p.id === projectId);
+    if (project) {
+      document.getElementById("projectId").value = project.id;
+      document.getElementById("projectName").value = project.project_name || "";
+      document.getElementById("projectDescription").value = project.description || "";
+      document.getElementById("projectClient").value = project.client_name || "";
+    }
+  } else {
+    title.textContent = "New Project";
+  }
+  
+  modal.classList.add("active");
+}
+
+function closeProjectModal() {
+  document.getElementById("projectModal").classList.remove("active");
+}
+
+async function saveProject() {
+  const id = document.getElementById("projectId").value;
+  const projectName = document.getElementById("projectName").value.trim();
+  const clientName = document.getElementById("projectClient").value;
+  
+  if (!projectName) {
+    alert("Project name is required");
+    return;
+  }
+  
+  if (!clientName) {
+    alert("Please select a client");
+    return;
+  }
+  
+  const projectData = {
+    project_name: projectName,
+    description: document.getElementById("projectDescription").value.trim(),
+    client_name: clientName
+  };
+  
+  try {
+    if (id) {
+      // Update existing project
+      const res = await fetch(`${SUPABASE_URL}/projects?id=eq.${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: ANON_KEY,
+          Authorization: "Bearer " + ANON_KEY,
+          Prefer: "return=representation"
+        },
+        body: JSON.stringify(projectData)
+      });
+      
+      if (!res.ok) throw new Error("Failed to update project");
+    } else {
+      // Create new project
+      const res = await fetch(`${SUPABASE_URL}/projects`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: ANON_KEY,
+          Authorization: "Bearer " + ANON_KEY,
+          Prefer: "return=representation"
+        },
+        body: JSON.stringify(projectData)
+      });
+      
+      if (!res.ok) throw new Error("Failed to create project");
+    }
+    
+    closeProjectModal();
+    await loadProjects();
+  } catch (err) {
+    alert("Error saving project: " + err.message);
+  }
+}
+
+async function deleteProject(projectId) {
+  if (!confirm("Delete this project? All tasks in this project will be unlinked.")) return;
+  
+  try {
+    // First, unlink all tasks from this project
+    await fetch(`${SUPABASE_URL}/tasks?project_id=eq.${projectId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: ANON_KEY,
+        Authorization: "Bearer " + ANON_KEY
+      },
+      body: JSON.stringify({ project_id: null })
+    });
+    
+    // Then delete the project
+    const res = await fetch(`${SUPABASE_URL}/projects?id=eq.${projectId}`, {
+      method: "DELETE",
+      headers: {
+        apikey: ANON_KEY,
+        Authorization: "Bearer " + ANON_KEY
+      }
+    });
+    
+    if (!res.ok) throw new Error("Failed to delete project");
+    
+    await loadProjects();
+  } catch (err) {
+    alert("Error deleting project: " + err.message);
+  }
+}
+
+/* ================================
+   PROJECT TASK MODAL
+================================ */
+function openProjectTaskModal(projectId) {
+  const modal = document.getElementById("projectTaskModal");
+  const title = document.getElementById("projectTaskModalTitle");
+  
+  // Reset form
+  document.getElementById("projectTaskId").value = "";
+  document.getElementById("projectTaskProjectId").value = projectId;
+  document.getElementById("projectTaskTitle").value = "";
+  document.getElementById("projectTaskDescription").value = "";
+  document.getElementById("projectTaskPriority").value = "medium";
+  document.getElementById("projectTaskStatus").value = "todo";
+  document.getElementById("projectTaskDueDate").value = "";
+  document.getElementById("projectTaskAssignedTo").value = "";
+  
+  title.textContent = "Add Task to Project";
+  modal.classList.add("active");
+}
+
+function openProjectTaskForEdit(taskId, projectId) {
+  const tasks = projectTasks[projectId] || [];
+  const task = tasks.find(t => t.id === taskId);
+  if (!task) return;
+  
+  const modal = document.getElementById("projectTaskModal");
+  const title = document.getElementById("projectTaskModalTitle");
+  
+  document.getElementById("projectTaskId").value = task.id;
+  document.getElementById("projectTaskProjectId").value = projectId;
+  document.getElementById("projectTaskTitle").value = task.title || "";
+  document.getElementById("projectTaskDescription").value = task.description || "";
+  document.getElementById("projectTaskPriority").value = task.priority || "medium";
+  document.getElementById("projectTaskStatus").value = task.status || "todo";
+  document.getElementById("projectTaskDueDate").value = task.due_date || "";
+  document.getElementById("projectTaskAssignedTo").value = task.assigned_to || "";
+  
+  title.textContent = "Edit Task";
+  modal.classList.add("active");
+}
+
+function closeProjectTaskModal() {
+  document.getElementById("projectTaskModal").classList.remove("active");
+}
+
+async function saveProjectTask() {
+  const id = document.getElementById("projectTaskId").value;
+  const projectId = document.getElementById("projectTaskProjectId").value;
+  const title = document.getElementById("projectTaskTitle").value.trim();
+  
+  if (!title) {
+    alert("Title is required");
+    return;
+  }
+  
+  // Get the client name from the project
+  const project = allProjects.find(p => p.id === projectId);
+  const clientName = project?.client_name || "";
+  
+  const taskData = {
+    title,
+    description: document.getElementById("projectTaskDescription").value.trim(),
+    priority: document.getElementById("projectTaskPriority").value,
+    status: document.getElementById("projectTaskStatus").value,
+    due_date: document.getElementById("projectTaskDueDate").value || null,
+    assigned_to: document.getElementById("projectTaskAssignedTo").value.trim() || null,
+    project_id: projectId,
+    category: clientName // Link to client as well
+  };
+  
+  try {
+    if (id) {
+      // Update existing task
+      const res = await fetch(`${SUPABASE_URL}/tasks?id=eq.${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: ANON_KEY,
+          Authorization: "Bearer " + ANON_KEY,
+          Prefer: "return=representation"
+        },
+        body: JSON.stringify(taskData)
+      });
+      
+      if (!res.ok) throw new Error("Failed to update task");
+    } else {
+      // Create new task
+      const res = await fetch(`${SUPABASE_URL}/tasks`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: ANON_KEY,
+          Authorization: "Bearer " + ANON_KEY,
+          Prefer: "return=representation"
+        },
+        body: JSON.stringify(taskData)
+      });
+      
+      if (!res.ok) throw new Error("Failed to create task");
+    }
+    
+    closeProjectTaskModal();
+    await loadProjects();
+  } catch (err) {
+    alert("Error saving task: " + err.message);
+  }
+}
+
+/* ================================
+   REVENUE PAGE KPIs + CHARTS
+================================ */
+let grossChartInstance = null;
+let watchmakerChartInstance = null;
+
+async function loadRevenueKPIs() {
+  const url = `${SUPABASE_URL}/invoices?select=*`;
+  const res = await fetch(url, {
+    headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+  });
+
+  if (!res.ok) {
+    console.error("Failed to load KPIs");
+    return;
+  }
+
+  const invoices = await res.json();
+
+  // Build monthly data and watchmaker (exclude Lamar from 15%)
+  const months = {};
+  const wmMonths = {};
+  invoices.forEach(inv => {
+    const month = inv.invoice_date?.slice(0, 7);
+    if (!month) return;
+    const gross = Number(inv.gross_amount || 0);
+    if (!months[month]) months[month] = 0;
+    months[month] += gross;
+    if (!isLamarInvoice(inv)) {
+      if (!wmMonths[month]) wmMonths[month] = 0;
+      wmMonths[month] += gross * 0.15;
+    }
+  });
+
+  const labels = Object.keys(months).sort();
+  const grossValues = labels.map(m => months[m]);
+  const watchmakerValues = labels.map(m => wmMonths[m] || 0);
+
+  // Calculate totals
+  const totalGross = grossValues.reduce((sum, v) => sum + v, 0);
+  const watchmakerRevenue = watchmakerValues.reduce((sum, v) => sum + v, 0);
+  const invoiceCount = invoices.length;
+
+  // Update KPI cards
+  document.getElementById("kpiTotalGross").textContent = "$" + totalGross.toLocaleString();
+  document.getElementById("kpiWatchmaker").textContent = "$" + watchmakerRevenue.toLocaleString();
+  document.getElementById("kpiInvoiceCount").textContent = invoiceCount;
+
+  // Gross Revenue Chart
+  const grossCtx = document.getElementById("grossChart").getContext("2d");
+  if (grossChartInstance) grossChartInstance.destroy();
+  grossChartInstance = new Chart(grossCtx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Gross Revenue",
+        data: grossValues,
+        backgroundColor: "#1A1A1A",
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { callback: v => "$" + v.toLocaleString() }
+        }
+      }
+    }
+  });
+
+  // Watchmaker Revenue Chart
+  const wmCtx = document.getElementById("watchmakerChart").getContext("2d");
+  if (watchmakerChartInstance) watchmakerChartInstance.destroy();
+  watchmakerChartInstance = new Chart(wmCtx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Watchmaker Revenue (15%)",
+        data: watchmakerValues,
+        backgroundColor: "#FFD60A",
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { callback: v => "$" + v.toLocaleString() }
+        }
+      }
+    }
+  });
+
+}
+
+/* ================================
+   CLIENT INVOICES PAGE
+================================ */
+function renderClientInvoicesGrid() {
+  const grid = document.getElementById("clientInvoicesGrid");
+  grid.innerHTML = CLIENTS.map(c => `
+    <div class="client-card" onclick="openClient('${c.name}', '${c.filter}')">
+      <div class="client-card-icon">${c.name.charAt(0)}</div>
+      <div class="client-card-name">${c.name}</div>
+    </div>
+  `).join("");
+}
+
+/* ================================
+   CLIENT PAGE
+================================ */
+let currentClientName = '';
+
+function openClient(name, filter) {
+  currentClientName = name;
+  document.getElementById("clientTitle").innerText = name;
+  document.getElementById("clientHeaderTitle").innerText = name;
+  showPage('client');
+  loadClientInvoices(filter || name);
+  loadClientTasks(name);
+}
+
+async function loadClientInvoices(filter) {
+  const encoded = encodeURIComponent(filter);
+  const url = `${SUPABASE_URL}/invoices?select=*&company_name=ilike.*${encoded}*`;
+  const res = await fetch(url, {
+    headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY },
+  });
+
+  if (!res.ok) {
+    console.error("loadClientInvoices fetch failed:", res.status, await res.text());
+    renderInvoiceTable([]);
+    renderMonthlyTotals([]);
+    renderClientChart([]);
+    return;
+  }
+
+  const data = await res.json();
+
+  // Update client KPIs
+  const totalGross = data.reduce((sum, inv) => sum + Number(inv.gross_amount || 0), 0);
+  const nonLamarGross = data
+    .filter(inv => !isLamarInvoice(inv))
+    .reduce((sum, inv) => sum + Number(inv.gross_amount || 0), 0);
+
+  document.getElementById("clientTotalGross").textContent = "$" + totalGross.toLocaleString();
+  document.getElementById("clientWatchmaker").textContent = "$" + (nonLamarGross * 0.15).toLocaleString();
+  document.getElementById("clientInvoiceCount").textContent = data.length;
+
+  renderInvoiceTable(data);
+  renderMonthlyTotals(data);
+  renderClientChart(data);
+}
+
+function renderInvoiceTable(rows) {
+  if (!rows.length) {
+    document.getElementById("clientInvoices").innerHTML = "<p style='padding:24px;color:#6B6B6B;'>No invoices yet.</p>";
+    return;
+  }
+
+  let html = `
+    <table>
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Company</th>
+          <th>Station</th>
+          <th>Invoice #</th>
+          <th>Gross</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  rows.forEach(inv => {
+    const month = inv.invoice_date?.slice(0,7) || "";
+    const gross = Number(inv.gross_amount || 0);
+    html += `
+      <tr>
+        <td>${month}</td>
+        <td>${inv.company_name || ""}</td>
+        <td>${inv.station_name || ""}</td>
+        <td>${inv.invoice_number || ""}</td>
+        <td>$${gross.toLocaleString()}</td>
+      </tr>
+    `;
+  });
+
+  html += "</tbody></table>";
+  document.getElementById("clientInvoices").innerHTML = html;
+}
+
+function renderMonthlyTotals(rows) {
+  const months = {};
+  const wmMonths = {};
+  rows.forEach(inv => {
+    const month = inv.invoice_date?.slice(0,7);
+    if (!month) return;
+    const gross = Number(inv.gross_amount || 0);
+    if (!months[month]) months[month] = 0;
+    months[month] += gross;
+    if (!isLamarInvoice(inv)) {
+      if (!wmMonths[month]) wmMonths[month] = 0;
+      wmMonths[month] += gross * 0.15;
+    }
+  });
+
+  if (!Object.keys(months).length) {
+    document.getElementById("clientMonthlyTable").innerHTML = "<p style='padding:24px;color:#6B6B6B;'>No data.</p>";
+    return;
+  }
+
+  let html = `
+    <table>
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Total Gross</th>
+          <th>Watchmaker (15%)</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  Object.keys(months).sort().forEach(m => {
+    html += `
+      <tr>
+        <td>${m}</td>
+        <td>$${months[m].toLocaleString()}</td>
+        <td>$${(wmMonths[m] || 0).toLocaleString()}</td>
+      </tr>
+    `;
+  });
+
+  html += "</tbody></table>";
+  document.getElementById("clientMonthlyTable").innerHTML = html;
+}
+
+let clientChartInstance = null;
+function renderClientChart(rows) {
+  const months = {};
+  rows.forEach(inv => {
+    const month = inv.invoice_date?.slice(0,7);
+    if (!month) return;
+    if (!months[month]) months[month] = 0;
+    months[month] += Number(inv.gross_amount || 0);
+  });
+
+  const labels = Object.keys(months).sort();
+  const values = labels.map(m => months[m]);
+
+  const ctx = document.getElementById("clientChart").getContext("2d");
+
+  if (clientChartInstance) clientChartInstance.destroy();
+
+  clientChartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Gross Revenue",
+        data: values,
+        backgroundColor: "#FFD60A",
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { callback: v => "$" + v.toLocaleString() }
+        }
+      }
+    }
+  });
+}
+
+/* ================================
+   TASKS CRUD
+================================ */
+let allTasks = [];
+
+async function loadTasks() {
+  const client = document.getElementById("filterClient")?.value || "";
+  const priority = document.getElementById("filterPriority")?.value || "";
+  const status = document.getElementById("filterStatus")?.value || "";
+  
+  let url = `${SUPABASE_URL}/tasks?select=*&order=created_at.desc`;
+  if (client) url += `&category=eq.${encodeURIComponent(client)}`;
+  if (priority) url += `&priority=eq.${priority}`;
+  if (status) url += `&status=eq.${status}`;
+
+  const res = await fetch(url, {
+    headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+  });
+
+  if (!res.ok) {
+    console.error("Failed to load tasks");
+    return;
+  }
+
+  allTasks = await res.json();
+  renderTasksTable(allTasks);
+}
+
+function renderTasksTable(tasks) {
+  const tbody = document.getElementById("tasksTableBody");
+  if (!tasks.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#6B6B6B;">No tasks found. Create your first task!</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = tasks.map(t => `
+    <tr class="task-row-clickable" onclick="openTaskDetail('${t.id}')">
+      <td><strong>${t.title}</strong></td>
+      <td><span class="badge badge-${t.priority}">${t.priority}</span></td>
+      <td><span class="badge badge-${t.status}">${t.status?.replace('_', ' ')}</span></td>
+      <td>${t.due_date || '—'}</td>
+      <td>${t.assigned_to || '—'}</td>
+      <td>${t.category || '—'}</td>
+      <td>
+        <button class="action-btn edit" onclick="event.stopPropagation(); editTask('${t.id}')">Edit</button>
+        <button class="action-btn delete" onclick="event.stopPropagation(); deleteTask('${t.id}')">Delete</button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+// Load tasks for a specific client
+async function loadClientTasks(clientName) {
+  const encoded = encodeURIComponent(clientName);
+  const url = `${SUPABASE_URL}/tasks?select=*&category=eq.${encoded}&order=created_at.desc`;
+  
+  const res = await fetch(url, {
+    headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+  });
+
+  if (!res.ok) {
+    console.error("Failed to load client tasks");
+    renderClientTasksTable([]);
+    return;
+  }
+
+  const tasks = await res.json();
+  // Also store in allTasks for editing
+  allTasks = tasks;
+  renderClientTasksTable(tasks);
+}
+
+function renderClientTasksTable(tasks) {
+  const tbody = document.getElementById("clientTasksTableBody");
+  if (!tasks.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#6B6B6B;">No tasks for this client yet.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = tasks.map(t => `
+    <tr class="task-row-clickable" onclick="openTaskDetail('${t.id}')">
+      <td><strong>${t.title}</strong></td>
+      <td><span class="badge badge-${t.priority}">${t.priority}</span></td>
+      <td><span class="badge badge-${t.status}">${t.status?.replace('_', ' ')}</span></td>
+      <td>${t.due_date || '—'}</td>
+      <td>${t.assigned_to || '—'}</td>
+      <td>
+        <button class="action-btn edit" onclick="event.stopPropagation(); editTask('${t.id}')">Edit</button>
+        <button class="action-btn delete" onclick="event.stopPropagation(); deleteTask('${t.id}')">Delete</button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+// Open task modal pre-filled with current client
+function openTaskModalForClient() {
+  openTaskModal();
+  document.getElementById("taskClient").value = currentClientName;
+}
+
+async function createTask(task) {
+  const res = await fetch(`${SUPABASE_URL}/tasks`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: ANON_KEY,
+      Authorization: "Bearer " + ANON_KEY,
+      Prefer: "return=representation"
+    },
+    body: JSON.stringify(task)
+  });
+
+  if (!res.ok) {
+    console.error("Failed to create task:", await res.text());
+    throw new Error("Failed to create task");
+  }
+
+  return res.json();
+}
+
+async function updateTask(id, updates) {
+  const res = await fetch(`${SUPABASE_URL}/tasks?id=eq.${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: ANON_KEY,
+      Authorization: "Bearer " + ANON_KEY,
+      Prefer: "return=representation"
+    },
+    body: JSON.stringify(updates)
+  });
+
+  if (!res.ok) {
+    console.error("Failed to update task:", await res.text());
+    throw new Error("Failed to update task");
+  }
+
+  return res.json();
+}
+
+async function deleteTask(id) {
+  if (!confirm("Are you sure you want to delete this task?")) return;
+
+  const res = await fetch(`${SUPABASE_URL}/tasks?id=eq.${id}`, {
+    method: "DELETE",
+    headers: {
+      apikey: ANON_KEY,
+      Authorization: "Bearer " + ANON_KEY
+    }
+  });
+
+  if (!res.ok) {
+    console.error("Failed to delete task");
+    return;
+  }
+
+  // Refresh current view
+  if (currentPage === 'tasks') loadTasks();
+  else if (currentPage === 'kanban') loadKanban();
+  else if (currentPage === 'reports') loadReports();
+  else if (currentPage === 'client' && currentClientName) loadClientTasks(currentClientName);
+}
+
+/* ================================
+   TASK MODAL
+================================ */
+function openTaskModal(taskId = null) {
+  const modal = document.getElementById("taskModal");
+  const title = document.getElementById("taskModalTitle");
+  
+  // Reset form
+  document.getElementById("taskId").value = "";
+  document.getElementById("taskTitle").value = "";
+  document.getElementById("taskDescription").value = "";
+  document.getElementById("taskPriority").value = "medium";
+  document.getElementById("taskStatus").value = "todo";
+  document.getElementById("taskDueDate").value = "";
+  document.getElementById("taskAssignedTo").value = "";
+  document.getElementById("taskClient").value = "";
+
+  if (taskId) {
+    title.textContent = "Edit Task";
+    const task = allTasks.find(t => t.id === taskId);
+    if (task) {
+      document.getElementById("taskId").value = task.id;
+      document.getElementById("taskTitle").value = task.title || "";
+      document.getElementById("taskDescription").value = task.description || "";
+      document.getElementById("taskPriority").value = task.priority || "medium";
+      document.getElementById("taskStatus").value = task.status || "todo";
+      document.getElementById("taskDueDate").value = task.due_date || "";
+      document.getElementById("taskAssignedTo").value = task.assigned_to || "";
+      document.getElementById("taskClient").value = task.category || "";
+    }
+  } else {
+    title.textContent = "New Task";
+  }
+
+  modal.classList.add("active");
+}
+
+function closeTaskModal() {
+  document.getElementById("taskModal").classList.remove("active");
+}
+
+function editTask(id) {
+  openTaskModal(id);
+}
+
+/* ================================
+   TASK DETAIL MODAL
+================================ */
+let currentDetailTaskId = null;
+
+function openTaskDetail(taskId) {
+  const task = allTasks.find(t => t.id === taskId);
+  if (!task) return;
+
+  currentDetailTaskId = taskId;
+
+  // Set title
+  document.getElementById("taskDetailTitle").textContent = task.title;
+
+  // Set badges
+  document.getElementById("taskDetailBadges").innerHTML = `
+    <span class="badge badge-${task.priority}">${task.priority}</span>
+    <span class="badge badge-${task.status}">${task.status?.replace('_', ' ')}</span>
+  `;
+
+  // Set description
+  const descEl = document.getElementById("taskDetailDescription");
+  if (task.description) {
+    descEl.textContent = task.description;
+    descEl.classList.add("description");
+  } else {
+    descEl.textContent = "No description provided.";
+    descEl.classList.remove("description");
+  }
+
+  // Set other fields
+  document.getElementById("taskDetailDueDate").textContent = task.due_date || "Not set";
+  document.getElementById("taskDetailAssignedTo").textContent = task.assigned_to || "Unassigned";
+  document.getElementById("taskDetailClient").textContent = task.category || "No client";
+  
+  // Format created date
+  if (task.created_at) {
+    const created = new Date(task.created_at);
+    document.getElementById("taskDetailCreated").textContent = created.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } else {
+    document.getElementById("taskDetailCreated").textContent = "—";
+  }
+
+  // Show modal
+  document.getElementById("taskDetailModal").classList.add("active");
+}
+
+function closeTaskDetailModal() {
+  document.getElementById("taskDetailModal").classList.remove("active");
+  currentDetailTaskId = null;
+}
+
+function editTaskFromDetail() {
+  if (currentDetailTaskId) {
+    closeTaskDetailModal();
+    editTask(currentDetailTaskId);
+  }
+}
+
+async function saveTask() {
+  const id = document.getElementById("taskId").value;
+  const title = document.getElementById("taskTitle").value.trim();
+  
+  if (!title) {
+    alert("Title is required");
+    return;
+  }
+
+  const taskData = {
+    title,
+    description: document.getElementById("taskDescription").value.trim(),
+    priority: document.getElementById("taskPriority").value,
+    status: document.getElementById("taskStatus").value,
+    due_date: document.getElementById("taskDueDate").value || null,
+    assigned_to: document.getElementById("taskAssignedTo").value.trim() || null,
+    category: document.getElementById("taskClient").value || null  // Client stored in category field
+  };
+
+  try {
+    if (id) {
+      await updateTask(id, taskData);
+    } else {
+      await createTask(taskData);
+    }
+    
+    closeTaskModal();
+    
+    // Refresh current view
+    if (currentPage === 'tasks') loadTasks();
+    else if (currentPage === 'kanban') loadKanban();
+    else if (currentPage === 'reports') loadReports();
+    else if (currentPage === 'client' && currentClientName) loadClientTasks(currentClientName);
+  } catch (err) {
+    alert("Error saving task: " + err.message);
+  }
+}
+
+/* ================================
+   KANBAN BOARD
+================================ */
+async function loadKanban() {
+  const res = await fetch(`${SUPABASE_URL}/tasks?select=*&order=created_at.desc`, {
+    headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+  });
+
+  if (!res.ok) {
+    console.error("Failed to load kanban");
+    return;
+  }
+
+  allTasks = await res.json();
+  renderKanban(allTasks);
+}
+
+function renderKanban(tasks) {
+  const statuses = ['backlog', 'todo', 'in_progress', 'review', 'done'];
+  
+  statuses.forEach(status => {
+    const column = document.getElementById(`kanban-${status}`);
+    const count = document.getElementById(`count-${status}`);
+    const statusTasks = tasks.filter(t => t.status === status);
+    
+    count.textContent = statusTasks.length;
+    
+    column.innerHTML = statusTasks.map(t => `
+      <div class="kanban-card" draggable="true" data-id="${t.id}" ondragstart="dragStart(event)" ondragend="dragEnd(event)" onclick="if(!event.defaultPrevented) openTaskDetail('${t.id}')">
+        <div class="kanban-card-title">${t.title}</div>
+        <div class="kanban-card-meta">
+          <span class="badge badge-${t.priority}">${t.priority}</span>
+          <span class="kanban-card-due">${t.due_date || ''}</span>
+        </div>
+      </div>
+    `).join("");
+  });
+
+  // Setup drop zones
+  document.querySelectorAll('.kanban-cards').forEach(col => {
+    col.addEventListener('dragover', dragOver);
+    col.addEventListener('drop', drop);
+  });
+}
+
+function dragStart(e) {
+  e.target.classList.add('dragging');
+  e.dataTransfer.setData('text/plain', e.target.dataset.id);
+}
+
+function dragEnd(e) {
+  e.target.classList.remove('dragging');
+}
+
+function dragOver(e) {
+  e.preventDefault();
+}
+
+async function drop(e) {
+  e.preventDefault();
+  const taskId = e.dataTransfer.getData('text/plain');
+  const newStatus = e.target.closest('.kanban-column')?.dataset.status;
+  
+  if (!newStatus || !taskId) return;
+
+  try {
+    await updateTask(taskId, { status: newStatus });
+    loadKanban();
+  } catch (err) {
+    console.error("Failed to update task status");
+  }
+}
+
+/* ================================
+   REPORTS
+================================ */
+let tasksPerWeekChart = null;
+let priorityChart = null;
+
+async function loadReports() {
+  const res = await fetch(`${SUPABASE_URL}/tasks?select=*`, {
+    headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+  });
+
+  if (!res.ok) {
+    console.error("Failed to load reports");
+    return;
+  }
+
+  const tasks = await res.json();
+  allTasks = tasks;
+
+  // Calculate KPIs
+  const today = new Date();
+  const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+  
+  const completedThisWeek = tasks.filter(t => {
+    if (t.status !== 'done') return false;
+    const updated = new Date(t.updated_at);
+    return updated >= weekAgo;
+  }).length;
+
+  const overdue = tasks.filter(t => {
+    if (t.status === 'done' || !t.due_date) return false;
+    return new Date(t.due_date) < today;
+  }).length;
+
+  const highPriority = tasks.filter(t => 
+    t.priority === 'high' || t.priority === 'urgent'
+  ).length;
+
+  document.getElementById("reportCompletedWeek").textContent = completedThisWeek;
+  document.getElementById("reportOverdue").textContent = overdue;
+  document.getElementById("reportHighPriority").textContent = highPriority;
+  document.getElementById("reportTotal").textContent = tasks.length;
+
+  // Tasks per week chart (last 8 weeks)
+  const weeks = {};
+  for (let i = 0; i < 8; i++) {
+    const weekStart = new Date(today.getTime() - (7 - i) * 7 * 24 * 60 * 60 * 1000);
+    const weekLabel = weekStart.toISOString().slice(0, 10);
+    weeks[weekLabel] = 0;
+  }
+
+  tasks.filter(t => t.status === 'done').forEach(t => {
+    const updated = new Date(t.updated_at);
+    const weekLabel = new Date(updated.getTime() - updated.getDay() * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    if (weeks[weekLabel] !== undefined) {
+      weeks[weekLabel]++;
+    }
+  });
+
+  const weekLabels = Object.keys(weeks);
+  const weekValues = Object.values(weeks);
+
+  const weekCtx = document.getElementById("tasksPerWeekChart").getContext("2d");
+  if (tasksPerWeekChart) tasksPerWeekChart.destroy();
+  tasksPerWeekChart = new Chart(weekCtx, {
+    type: "bar",
+    data: {
+      labels: weekLabels.map(d => {
+        const date = new Date(d);
+        return `${date.getMonth() + 1}/${date.getDate()}`;
+      }),
+      datasets: [{
+        label: "Completed",
+        data: weekValues,
+        backgroundColor: "#22C55E",
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+
+  // Priority distribution pie chart
+  const priorityCounts = {
+    low: tasks.filter(t => t.priority === 'low').length,
+    medium: tasks.filter(t => t.priority === 'medium').length,
+    high: tasks.filter(t => t.priority === 'high').length,
+    urgent: tasks.filter(t => t.priority === 'urgent').length
+  };
+
+  const prioCtx = document.getElementById("priorityChart").getContext("2d");
+  if (priorityChart) priorityChart.destroy();
+  priorityChart = new Chart(prioCtx, {
+    type: "doughnut",
+    data: {
+      labels: ['Low', 'Medium', 'High', 'Urgent'],
+      datasets: [{
+        data: [priorityCounts.low, priorityCounts.medium, priorityCounts.high, priorityCounts.urgent],
+        backgroundColor: ['#3B82F6', '#22C55E', '#F97316', '#EF4444']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom' }
+      }
+    }
+  });
+}
+
+/* ================================
+   PDF UPLOAD
+================================ */
+function setupPdfUpload() {
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+
+  const dropZone = document.getElementById("drop-zone");
+  const fileInput = document.getElementById("file-input");
+
+  dropZone.addEventListener("click", () => fileInput.click());
+
+  dropZone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropZone.style.borderColor = "#FFD60A";
+    dropZone.style.background = "#FFFEF5";
+  });
+
+  dropZone.addEventListener("dragleave", () => {
+    dropZone.style.borderColor = "";
+    dropZone.style.background = "";
+  });
+
+  dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    dropZone.style.borderColor = "";
+    dropZone.style.background = "";
+    handleFiles(e.dataTransfer.files);
+  });
+
+  fileInput.addEventListener("change", () => handleFiles(fileInput.files));
+}
+
+const rawJson = document.getElementById("rawJson");
+const statusEl = document.getElementById("status");
+
+function setStatus(msg) {
+  if (statusEl) statusEl.textContent = msg || "";
+}
+
+async function handleFiles(fileList) {
+  const pdfs = Array.from(fileList).filter(f => f.type === "application/pdf");
+  if (!pdfs.length) return;
+  for (const file of pdfs) {
+    await processPDF(file);
+  }
+}
+
+async function processPDF(file) {
+  try {
+    setStatus("Reading " + file.name + "...");
+    rawJson.textContent = "Extracting text from " + file.name + "...";
+    const text = await extractPdfText(file);
+    setStatus("Sending to parser...");
+    rawJson.textContent = "Sending to parser...";
+    const result = await callFunction(file.name, text);
+    setStatus("✓ Done!");
+    rawJson.textContent = JSON.stringify(result, null, 2);
+    const invoice = result.invoice || result;
+    if (invoice) {
+      await saveInvoiceToSupabase(invoice);
+      if (currentPage === 'revenue') loadRevenueKPIs();
+    }
+  } catch (err) {
+    console.error(err);
+    rawJson.textContent = "Error: " + err.message;
+    setStatus("");
+  }
+}
+
+async function extractPdfText(file) {
+  const buffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+  let text = "";
+  const maxPages = Math.min(3, pdf.numPages);
+  for (let i = 1; i <= maxPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(t => t.str).join(" ") + "\n";
+  }
+  return text;
+}
+
+async function callFunction(fileName, text) {
+  const res = await fetch(FUNCTION_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: ANON_KEY,
+      Authorization: "Bearer " + ANON_KEY,
+    },
+    body: JSON.stringify({ fileName, text }),
+  });
+  return res.json();
+}
+
+async function saveInvoiceToSupabase(invoice) {
+  const res = await fetch(`${SUPABASE_URL}/invoices`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: ANON_KEY,
+      Authorization: "Bearer " + ANON_KEY,
+      Prefer: "return=representation"
+    },
+    body: JSON.stringify({
+      company_name: invoice.company_name || "",
+      invoice_number: invoice.invoice_number || "",
+      invoice_date: invoice.invoice_date || "",
+      gross_amount: invoice.gross_amount || 0,
+      station_name: invoice.station_name || "",
+      raw_json: invoice
+    })
+  });
+
+  if (!res.ok) {
+    console.error("Insert failed:", await res.text());
+    throw new Error("Failed to save invoice");
+  }
+
+  console.log("Invoice saved to Supabase");
+}
+</script>
+</body>
+</html>
