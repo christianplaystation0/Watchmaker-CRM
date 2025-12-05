@@ -715,6 +715,99 @@
       font-size: 13px;
     }
 
+    /* ===== TASK TABS ===== */
+    .task-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid var(--light-gray);
+      padding-bottom: 0;
+    }
+
+    .task-tab {
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--medium-gray);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .task-tab:hover {
+      color: var(--black);
+    }
+
+    .task-tab.active {
+      color: var(--black);
+    }
+
+    .task-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--yellow);
+    }
+
+    .my-tasks-count {
+      background: var(--light-gray);
+      color: var(--dark-gray);
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    .task-tab.active .my-tasks-count {
+      background: var(--yellow);
+      color: var(--black);
+    }
+
+    /* Private Task Indicator */
+    .private-badge {
+      background: var(--dark-gray);
+      color: white;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+    }
+
+    /* Checkbox Styling */
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .checkbox-input {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--yellow);
+      cursor: pointer;
+    }
+
+    .checkbox-label {
+      font-size: 14px;
+      color: var(--dark-gray);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .checkbox-label .lock-icon {
+      font-size: 14px;
+    }
+
     /* ===== MAIN CONTENT ===== */
     .main-content {
       flex: 1;
@@ -2611,6 +2704,16 @@
         <h1 class="page-title">Tasks</h1>
         <p class="page-subtitle">Manage your product tasks and assignments</p>
 
+        <!-- TASK TABS -->
+        <div class="task-tabs">
+          <button class="task-tab active" id="tabAllTasks" onclick="switchTaskTab('all')">
+            All Tasks
+          </button>
+          <button class="task-tab" id="tabMyTasks" onclick="switchTaskTab('my')">
+            My Tasks <span class="my-tasks-count" id="myTasksCount">0</span>
+          </button>
+        </div>
+
         <!-- FILTERS -->
         <div class="filters-row">
           <select class="filter-select" id="filterClient" onchange="loadTasks()">
@@ -2881,6 +2984,12 @@
           <option value="">— Unassigned —</option>
           <!-- JS will populate with team members -->
         </select>
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" class="checkbox-input" id="taskPrivate">
+        <label class="checkbox-label" for="taskPrivate">
+          <span class="lock-icon">🔒</span> Private task (only visible to you)
+        </label>
       </div>
     </div>
     <div class="modal-footer">
@@ -3237,6 +3346,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Store current user session
   window.currentSession = session;
   
+  // Ensure current user has a profile with email
+  await ensureUserProfile(session.user);
+  
   // Load all user profiles (for colors and team display)
   await loadAllUserProfiles();
   
@@ -3266,6 +3378,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   
   // Setup real-time subscriptions for live updates
   setupRealtimeSubscriptions();
+  
 });
 
 /* ================================
@@ -4065,6 +4178,19 @@ function renderClientChart(rows) {
    TASKS CRUD
 ================================ */
 let allTasks = [];
+let currentTaskTab = 'all'; // 'all' or 'my'
+
+// Switch between All Tasks and My Tasks tabs
+function switchTaskTab(tab) {
+  currentTaskTab = tab;
+  
+  // Update tab styles
+  document.getElementById('tabAllTasks').classList.toggle('active', tab === 'all');
+  document.getElementById('tabMyTasks').classList.toggle('active', tab === 'my');
+  
+  // Reload tasks with new filter
+  loadTasks();
+}
 
 async function loadTasks() {
   const client = document.getElementById("filterClient")?.value || "";
@@ -4086,19 +4212,53 @@ async function loadTasks() {
   }
 
   allTasks = await res.json();
-  renderTasksTable(allTasks);
+  
+  // Get current user info for filtering
+  const currentUserName = window.currentSession?.user?.user_metadata?.display_name || 
+                          window.currentSession?.user?.email || '';
+  const currentUserId = window.currentSession?.user?.id || '';
+  
+  // Filter based on current tab
+  let filteredTasks = allTasks;
+  
+  if (currentTaskTab === 'my') {
+    // My Tasks: Show tasks assigned to me (both public and private)
+    filteredTasks = allTasks.filter(t => 
+      t.assigned_to === currentUserName || t.created_by === currentUserId
+    );
+  } else {
+    // All Tasks: Show public tasks + my private tasks
+    filteredTasks = allTasks.filter(t => 
+      !t.is_private || t.created_by === currentUserId || t.assigned_to === currentUserName
+    );
+  }
+  
+  // Update My Tasks count
+  const myTasksCount = allTasks.filter(t => 
+    t.assigned_to === currentUserName || t.created_by === currentUserId
+  ).length;
+  const countEl = document.getElementById('myTasksCount');
+  if (countEl) countEl.textContent = myTasksCount;
+  
+  renderTasksTable(filteredTasks);
 }
 
 function renderTasksTable(tasks) {
   const tbody = document.getElementById("tasksTableBody");
   if (!tasks.length) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#6B6B6B;">No tasks found. Create your first task!</td></tr>`;
+    const message = currentTaskTab === 'my' 
+      ? 'No tasks assigned to you yet.' 
+      : 'No tasks found. Create your first task!';
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#6B6B6B;">${message}</td></tr>`;
     return;
   }
 
   tbody.innerHTML = tasks.map(t => `
     <tr class="task-row-clickable" onclick="openTaskDetail('${t.id}')">
-      <td><strong>${t.title}</strong></td>
+      <td>
+        <strong>${escapeHtml(t.title)}</strong>
+        ${t.is_private ? '<span class="private-badge">🔒 Private</span>' : ''}
+      </td>
       <td><span class="badge badge-${t.priority}">${t.priority}</span></td>
       <td><span class="badge badge-${t.status}">${t.status?.replace('_', ' ')}</span></td>
       <td>${t.due_date || '—'}</td>
@@ -4240,6 +4400,7 @@ function openTaskModal(taskId = null) {
   document.getElementById("taskDueDate").value = "";
   document.getElementById("taskAssignedTo").value = "";
   document.getElementById("taskClient").value = "";
+  document.getElementById("taskPrivate").checked = false;
 
   if (taskId) {
     title.textContent = "Edit Task";
@@ -4253,6 +4414,7 @@ function openTaskModal(taskId = null) {
       document.getElementById("taskDueDate").value = task.due_date || "";
       document.getElementById("taskAssignedTo").value = task.assigned_to || "";
       document.getElementById("taskClient").value = task.category || "";
+      document.getElementById("taskPrivate").checked = task.is_private || false;
     }
   } else {
     title.textContent = "New Task";
@@ -4281,7 +4443,9 @@ async function openTaskDetail(taskId) {
   currentDetailTaskId = taskId;
 
   // Set title
-  document.getElementById("taskDetailTitle").textContent = task.title;
+  document.getElementById("taskDetailTitle").innerHTML = task.is_private 
+    ? `${escapeHtml(task.title)} <span class="private-badge">🔒 Private</span>`
+    : escapeHtml(task.title);
 
   // Set badges
   document.getElementById("taskDetailBadges").innerHTML = `
@@ -4354,16 +4518,24 @@ async function saveTask() {
     status: document.getElementById("taskStatus").value,
     due_date: document.getElementById("taskDueDate").value || null,
     assigned_to: document.getElementById("taskAssignedTo").value.trim() || null,
-    category: document.getElementById("taskClient").value || null  // Client stored in category field
+    category: document.getElementById("taskClient").value || null,  // Client stored in category field
+    is_private: document.getElementById("taskPrivate").checked
   };
 
+  // Add created_by for new tasks
+  if (!id && window.currentSession?.user?.id) {
+    taskData.created_by = window.currentSession.user.id;
+  }
+
   try {
+    // Create or update task
+    let savedTaskRows;
     if (id) {
-      await updateTask(id, taskData);
+      savedTaskRows = await updateTask(id, taskData);
     } else {
-      await createTask(taskData);
+      savedTaskRows = await createTask(taskData);
     }
-    
+
     closeTaskModal();
     
     // Refresh current view
@@ -4390,7 +4562,17 @@ async function loadKanban() {
   }
 
   allTasks = await res.json();
-  renderKanban(allTasks);
+  
+  // Filter out private tasks that don't belong to current user
+  const currentUserName = window.currentSession?.user?.user_metadata?.display_name || 
+                          window.currentSession?.user?.email || '';
+  const currentUserId = window.currentSession?.user?.id || '';
+  
+  const visibleTasks = allTasks.filter(t => 
+    !t.is_private || t.created_by === currentUserId || t.assigned_to === currentUserName
+  );
+  
+  renderKanban(visibleTasks);
 }
 
 function renderKanban(tasks) {
@@ -4405,7 +4587,10 @@ function renderKanban(tasks) {
     
     column.innerHTML = statusTasks.map(t => `
       <div class="kanban-card" draggable="true" data-id="${t.id}" ondragstart="dragStart(event)" ondragend="dragEnd(event)" onclick="if(!event.defaultPrevented) openTaskDetail('${t.id}')">
-        <div class="kanban-card-title">${t.title}</div>
+        <div class="kanban-card-title">
+          ${escapeHtml(t.title)}
+          ${t.is_private ? '<span class="private-badge">🔒</span>' : ''}
+        </div>
         <div class="kanban-card-meta">
           <span class="badge badge-${t.priority}">${t.priority}</span>
           <span class="kanban-card-due">${t.due_date || ''}</span>
@@ -4693,6 +4878,58 @@ async function saveInvoiceToSupabase(invoice) {
 /* ================================
    USER PROFILES & COLORS
 ================================ */
+// Ensure user has a profile with their email (for email notifications)
+async function ensureUserProfile(user) {
+  if (!user) return;
+  
+  const userId = user.id;
+  const userEmail = user.email;
+  const displayName = user.user_metadata?.display_name || userEmail;
+  
+  try {
+    // Check if profile exists
+    const checkRes = await fetch(`${SUPABASE_URL}/profiles?id=eq.${userId}&select=id,email`, {
+      headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+    });
+    
+    if (checkRes.ok) {
+      const profiles = await checkRes.json();
+      
+      if (profiles.length === 0) {
+        // Create profile
+        await fetch(`${SUPABASE_URL}/profiles`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: ANON_KEY,
+            Authorization: "Bearer " + ANON_KEY
+          },
+          body: JSON.stringify({
+            id: userId,
+            display_name: displayName,
+            email: userEmail
+          })
+        });
+        console.log('✅ Created user profile');
+      } else if (!profiles[0].email) {
+        // Update profile with email if missing
+        await fetch(`${SUPABASE_URL}/profiles?id=eq.${userId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: ANON_KEY,
+            Authorization: "Bearer " + ANON_KEY
+          },
+          body: JSON.stringify({ email: userEmail })
+        });
+        console.log('✅ Updated user profile with email');
+      }
+    }
+  } catch (err) {
+    console.error("Error ensuring user profile:", err);
+  }
+}
+
 async function loadAllUserProfiles() {
   try {
     const res = await fetch(`${SUPABASE_URL}/profiles?select=*`, {
@@ -4884,7 +5121,8 @@ async function saveProfile() {
       data: { display_name: displayName }
     });
     
-    // Update profile table
+    // Update profile table (always include email to ensure it's stored)
+    const userEmail = window.currentSession.user.email;
     const res = await fetch(`${SUPABASE_URL}/profiles?id=eq.${userId}`, {
       method: "PATCH",
       headers: {
@@ -4892,7 +5130,7 @@ async function saveProfile() {
         apikey: ANON_KEY,
         Authorization: "Bearer " + ANON_KEY
       },
-      body: JSON.stringify({ display_name: displayName })
+      body: JSON.stringify({ display_name: displayName, email: userEmail })
     });
     
     if (!res.ok) {
@@ -4907,7 +5145,7 @@ async function saveProfile() {
         body: JSON.stringify({
           id: userId,
           display_name: displayName,
-          email: window.currentSession.user.email
+          email: userEmail
         })
       });
     }
@@ -5287,6 +5525,7 @@ function startNotificationPolling() {
   }, 60000);
 }
 
+
 /* ================================
    REAL-TIME SUBSCRIPTIONS
 ================================ */
@@ -5418,6 +5657,113 @@ function handleTaskChange(payload) {
       allTasks[idx] = payload.new;
     }
   }
+}
+
+// Check if a task was assigned/reassigned to current user
+function checkForReassignment(payload) {
+  // No-op now – we reverted to original behavior (emails only on create via saveTask)
+  return;
+}
+
+// Show a prominent notification for task assignment
+function showAssignmentNotification(task, type) {
+  // Show in-app notification banner
+  showAssignmentBanner(task, type);
+  
+  // Add to local notifications (mark as unread)
+  const readIds = getReadNotificationIds();
+  const filteredIds = readIds.filter(id => id !== task.id);
+  saveReadNotificationIds(filteredIds);
+  
+  // Update badge immediately
+  loadUserNotifications();
+}
+
+// Show a banner notification at the top of the screen
+function showAssignmentBanner(task, type) {
+  // Remove existing banner
+  const existing = document.getElementById('assignmentBanner');
+  if (existing) existing.remove();
+  
+  const banner = document.createElement('div');
+  banner.id = 'assignmentBanner';
+  banner.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #1A1A1A 0%, #2D2D2D 100%);
+    color: white;
+    padding: 16px 24px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    animation: slideDown 0.4s ease;
+    max-width: 90%;
+    cursor: pointer;
+  `;
+  
+  const icon = type === 'reassigned' ? '🔄' : '📋';
+  const title = type === 'reassigned' ? 'Task Reassigned to You' : 'New Task Assigned';
+  
+  banner.innerHTML = `
+    <div style="font-size: 28px;">${icon}</div>
+    <div style="flex: 1;">
+      <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">${title}</div>
+      <div style="font-size: 13px; opacity: 0.9;">${escapeHtml(task.title)}</div>
+      <div style="font-size: 11px; opacity: 0.7; margin-top: 4px;">
+        <span class="badge badge-${task.priority}" style="font-size: 10px;">${task.priority}</span>
+        ${task.due_date ? `• Due: ${task.due_date}` : ''}
+      </div>
+    </div>
+    <button onclick="this.parentElement.remove()" style="
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+    ">✕</button>
+  `;
+  
+  // Click to view task
+  banner.onclick = (e) => {
+    if (e.target.tagName !== 'BUTTON') {
+      banner.remove();
+      // Load tasks and open detail
+      loadTasks().then(() => {
+        openTaskDetail(task.id);
+      });
+    }
+  };
+  
+  // Add animation keyframes
+  if (!document.getElementById('bannerStyles')) {
+    const style = document.createElement('style');
+    style.id = 'bannerStyles';
+    style.textContent = `
+      @keyframes slideDown {
+        from { transform: translateX(-50%) translateY(-100px); opacity: 0; }
+        to { transform: translateX(-50%) translateY(0); opacity: 1; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  document.body.appendChild(banner);
+  
+  // Auto-remove after 8 seconds
+  setTimeout(() => {
+    if (banner.parentElement) {
+      banner.style.animation = 'slideDown 0.3s ease reverse';
+      setTimeout(() => banner.remove(), 300);
+    }
+  }, 8000);
 }
 
 // Handle project changes
