@@ -4218,14 +4218,20 @@ async function loadTasks() {
                           window.currentSession?.user?.email || '';
   const currentUserId = window.currentSession?.user?.id || '';
   
+  console.log('Current tab:', currentTaskTab);
+  console.log('Current user name:', currentUserName);
+  console.log('All tasks assigned_to values:', allTasks.map(t => ({ title: t.title, assigned_to: t.assigned_to })));
+  
   // Filter based on current tab
   let filteredTasks = allTasks;
   
   if (currentTaskTab === 'my') {
-    // My Tasks: Show tasks assigned to me (both public and private)
-    filteredTasks = allTasks.filter(t => 
-      t.assigned_to === currentUserName || t.created_by === currentUserId
-    );
+    // My Tasks: Show ONLY tasks where assigned_to exactly matches current user
+    filteredTasks = allTasks.filter(t => {
+      const match = t.assigned_to === currentUserName;
+      console.log(`Task "${t.title}" assigned to "${t.assigned_to}" - matches "${currentUserName}": ${match}`);
+      return match;
+    });
   } else {
     // All Tasks: Show public tasks + my private tasks
     filteredTasks = allTasks.filter(t => 
@@ -4233,10 +4239,10 @@ async function loadTasks() {
     );
   }
   
-  // Update My Tasks count
-  const myTasksCount = allTasks.filter(t => 
-    t.assigned_to === currentUserName || t.created_by === currentUserId
-  ).length;
+  console.log('Filtered tasks count:', filteredTasks.length);
+  
+  // Update My Tasks count (only tasks assigned to me)
+  const myTasksCount = allTasks.filter(t => t.assigned_to === currentUserName).length;
   const countEl = document.getElementById('myTasksCount');
   if (countEl) countEl.textContent = myTasksCount;
   
@@ -4527,6 +4533,11 @@ async function saveTask() {
     taskData.created_by = window.currentSession.user.id;
   }
 
+  // Get original task to check if assigned_to changed
+  const originalTask = id ? allTasks.find(t => t.id === id) : null;
+  const wasAssignedTo = originalTask?.assigned_to;
+  const nowAssignedTo = taskData.assigned_to;
+
   try {
     // Create or update task
     let savedTaskRows;
@@ -4534,6 +4545,12 @@ async function saveTask() {
       savedTaskRows = await updateTask(id, taskData);
     } else {
       savedTaskRows = await createTask(taskData);
+    }
+
+    // Send email if task is assigned to someone new
+    if (nowAssignedTo && nowAssignedTo !== wasAssignedTo) {
+      const isReassignment = !!wasAssignedTo;
+      await sendAssignmentEmail(nowAssignedTo, taskData, isReassignment ? 'reassigned' : 'assigned');
     }
 
     closeTaskModal();
@@ -4545,6 +4562,71 @@ async function saveTask() {
     else if (currentPage === 'client' && currentClientName) loadClientTasks(currentClientName);
   } catch (err) {
     alert("Error saving task: " + err.message);
+  }
+}
+
+// Send assignment email to the assigned person
+async function sendAssignmentEmail(assignedToName, task, type) {
+  console.log('🔍 Looking for user:', assignedToName);
+  console.log('🔍 All profiles:', allUserProfiles.map(p => ({ 
+    display_name: p.display_name, 
+    email: p.email 
+  })));
+  
+  // Find the user's profile by display_name
+  const userProfile = allUserProfiles.find(p => 
+    p.display_name === assignedToName || p.email === assignedToName
+  );
+  
+  console.log('🔍 Found profile:', userProfile);
+  
+  if (!userProfile || !userProfile.email) {
+    console.log('❌ Could not find email for:', assignedToName);
+    return;
+  }
+  
+  const userEmail = userProfile.email;
+  console.log('📧 Will send email to:', userEmail);
+  
+  // Don't send email to yourself
+  const currentUserEmail = window.currentSession?.user?.email;
+  if (userEmail === currentUserEmail) {
+    console.log('⏭️ Skipping email - assigned to self');
+    return;
+  }
+  
+  const subject = type === 'reassigned' 
+    ? `Task Reassigned: ${task.title}`
+    : `New Task Assigned: ${task.title}`;
+  
+  const emailData = {
+    to: userEmail,
+    subject: subject,
+    taskTitle: task.title,
+    taskDescription: task.description || 'No description',
+    taskPriority: task.priority,
+    taskDueDate: task.due_date || 'No due date',
+    taskStatus: task.status,
+    type: type
+  };
+  
+  try {
+    const res = await fetch(`${SUPABASE_BASE_URL}/functions/v1/send-task-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${ANON_KEY}`
+      },
+      body: JSON.stringify(emailData)
+    });
+    
+    if (res.ok) {
+      console.log('✅ Email sent to:', userEmail);
+    } else {
+      console.error('Failed to send email:', await res.text());
+    }
+  } catch (err) {
+    console.error('Error sending email:', err);
   }
 }
 
@@ -5865,3 +5947,4 @@ function showUpdateToast(message) {
 </script>
 </body>
 </html>
+
