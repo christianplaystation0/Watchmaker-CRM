@@ -780,6 +780,16 @@
       margin-left: 6px;
     }
 
+    /* Archived Task Indicator */
+    .archived-badge {
+      background: var(--medium-gray);
+      color: white;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+    }
+
     /* Checkbox Styling */
     .checkbox-group {
       display: flex;
@@ -2740,6 +2750,7 @@
             <option value="in_progress">In Progress</option>
             <option value="review">Review</option>
             <option value="done">Done</option>
+            <option value="archived">📦 Archived</option>
           </select>
         </div>
 
@@ -3205,7 +3216,24 @@ const SUPABASE_BASE_URL = "https://cagajzhridvohsrviwaw.supabase.co";
 const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhZ2FqemhyaWR2b2hzcnZpd2F3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyODQ0ODYsImV4cCI6MjA3OTg2MDQ4Nn0.CSZvT7tPgoEyXwUW_wLOzZUfSUPLAZMpbXvvLOn5cNo";
 
 // Initialize Supabase Auth Client
-const supabaseAuth = window.supabase.createClient(SUPABASE_BASE_URL, ANON_KEY);
+const supabaseAuth = window.supabase.createClient(SUPABASE_BASE_URL, ANON_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
+});
+
+// Global access token - updated on login
+let ACCESS_TOKEN = ANON_KEY;
+
+// Helper function to get auth headers with user's session token
+function getAuthHeaders() {
+  return {
+    apikey: ANON_KEY,
+    Authorization: "Bearer " + ACCESS_TOKEN
+  };
+}
 
 const CLIENTS = [
   { name: "Warrior Injury Law", filter: "Warrior", hasInvoices: true },
@@ -3346,6 +3374,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Store current user session
   window.currentSession = session;
   
+  // Update global access token for API calls
+  ACCESS_TOKEN = session.access_token;
+  
   // Ensure current user has a profile with email
   await ensureUserProfile(session.user);
   
@@ -3396,12 +3427,16 @@ async function handleLogout() {
 
 function renderClientGrid() {
   const grid = document.getElementById("clientGrid");
-  grid.innerHTML = CLIENTS.map(c => `
-    <div class="client-card" onclick="openClient('${c.name}', '${c.filter}')">
+  grid.innerHTML = CLIENTS.map(c => {
+    // Escape apostrophes in names for onclick handler
+    const safeName = c.name.replace(/'/g, "\\'");
+    return `
+    <div class="client-card" onclick="openClient('${safeName}', '${c.filter}')">
       <div class="client-card-icon">${c.name.charAt(0)}</div>
       <div class="client-card-name">${c.name}</div>
     </div>
-  `).join("");
+  `;
+  }).join("");
 }
 
 /* ================================
@@ -3410,13 +3445,13 @@ function renderClientGrid() {
 async function loadDashboardStats() {
   // Load projects count
   const projectsRes = await fetch(`${SUPABASE_URL}/projects?select=id`, {
-    headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+    headers: getAuthHeaders()
   });
   const projects = projectsRes.ok ? await projectsRes.json() : [];
   
   // Load tasks
   const tasksRes = await fetch(`${SUPABASE_URL}/tasks?select=*`, {
-    headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+    headers: getAuthHeaders()
   });
   const tasks = tasksRes.ok ? await tasksRes.json() : [];
   
@@ -3480,7 +3515,7 @@ async function loadProjects() {
   }
   
   const res = await fetch(url, {
-    headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+    headers: getAuthHeaders()
   });
   
   if (!res.ok) {
@@ -3502,7 +3537,7 @@ async function loadProjects() {
 
 async function loadProjectTasks(projectId) {
   const res = await fetch(`${SUPABASE_URL}/tasks?select=*&project_id=eq.${projectId}&order=created_at.desc`, {
-    headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+    headers: getAuthHeaders()
   });
   
   if (res.ok) {
@@ -3632,7 +3667,7 @@ async function projectDrop(e, newProjectId) {
       headers: {
         "Content-Type": "application/json",
         apikey: ANON_KEY,
-        Authorization: "Bearer " + ANON_KEY,
+        Authorization: "Bearer " + ACCESS_TOKEN,
         Prefer: "return=representation"
       },
       body: JSON.stringify({ project_id: newProjectId })
@@ -3712,7 +3747,7 @@ async function saveProject() {
         headers: {
           "Content-Type": "application/json",
           apikey: ANON_KEY,
-          Authorization: "Bearer " + ANON_KEY,
+          Authorization: "Bearer " + ACCESS_TOKEN,
           Prefer: "return=representation"
         },
         body: JSON.stringify(projectData)
@@ -3726,7 +3761,7 @@ async function saveProject() {
         headers: {
           "Content-Type": "application/json",
           apikey: ANON_KEY,
-          Authorization: "Bearer " + ANON_KEY,
+          Authorization: "Bearer " + ACCESS_TOKEN,
           Prefer: "return=representation"
         },
         body: JSON.stringify(projectData)
@@ -3752,7 +3787,7 @@ async function deleteProject(projectId) {
       headers: {
         "Content-Type": "application/json",
         apikey: ANON_KEY,
-        Authorization: "Bearer " + ANON_KEY
+        Authorization: "Bearer " + ACCESS_TOKEN
       },
       body: JSON.stringify({ project_id: null })
     });
@@ -3762,7 +3797,7 @@ async function deleteProject(projectId) {
       method: "DELETE",
       headers: {
         apikey: ANON_KEY,
-        Authorization: "Bearer " + ANON_KEY
+        Authorization: "Bearer " + ACCESS_TOKEN
       }
     });
     
@@ -3853,7 +3888,7 @@ async function saveProjectTask() {
         headers: {
           "Content-Type": "application/json",
           apikey: ANON_KEY,
-          Authorization: "Bearer " + ANON_KEY,
+          Authorization: "Bearer " + ACCESS_TOKEN,
           Prefer: "return=representation"
         },
         body: JSON.stringify(taskData)
@@ -3867,7 +3902,7 @@ async function saveProjectTask() {
         headers: {
           "Content-Type": "application/json",
           apikey: ANON_KEY,
-          Authorization: "Bearer " + ANON_KEY,
+          Authorization: "Bearer " + ACCESS_TOKEN,
           Prefer: "return=representation"
         },
         body: JSON.stringify(taskData)
@@ -3892,7 +3927,7 @@ let watchmakerChartInstance = null;
 async function loadRevenueKPIs() {
   const url = `${SUPABASE_URL}/invoices?select=*`;
   const res = await fetch(url, {
-    headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+    headers: getAuthHeaders()
   });
 
   if (!res.ok) {
@@ -3994,12 +4029,16 @@ function renderClientInvoicesGrid() {
   const grid = document.getElementById("clientInvoicesGrid");
   // Only show clients that have invoices
   const invoiceClients = CLIENTS.filter(c => c.hasInvoices !== false);
-  grid.innerHTML = invoiceClients.map(c => `
-    <div class="client-card" onclick="openClient('${c.name}', '${c.filter}')">
+  grid.innerHTML = invoiceClients.map(c => {
+    // Escape apostrophes in names for onclick handler
+    const safeName = c.name.replace(/'/g, "\\'");
+    return `
+    <div class="client-card" onclick="openClient('${safeName}', '${c.filter}')">
       <div class="client-card-icon">${c.name.charAt(0)}</div>
       <div class="client-card-name">${c.name}</div>
     </div>
-  `).join("");
+  `;
+  }).join("");
 }
 
 /* ================================
@@ -4019,8 +4058,9 @@ function openClient(name, filter) {
 async function loadClientInvoices(filter) {
   const encoded = encodeURIComponent(filter);
   const url = `${SUPABASE_URL}/invoices?select=*&company_name=ilike.*${encoded}*`;
+  
   const res = await fetch(url, {
-    headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY },
+    headers: getAuthHeaders(),
   });
 
   if (!res.ok) {
@@ -4200,10 +4240,19 @@ async function loadTasks() {
   let url = `${SUPABASE_URL}/tasks?select=*&order=created_at.desc`;
   if (client) url += `&category=eq.${encodeURIComponent(client)}`;
   if (priority) url += `&priority=eq.${priority}`;
-  if (status) url += `&status=eq.${status}`;
+  
+  // Handle archived filter specially
+  if (status === 'archived') {
+    url += `&archived_at=not.is.null`;
+  } else if (status) {
+    url += `&status=eq.${status}&archived_at=is.null`;
+  } else {
+    // Default: hide archived tasks
+    url += `&archived_at=is.null`;
+  }
 
   const res = await fetch(url, {
-    headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+    headers: getAuthHeaders()
   });
 
   if (!res.ok) {
@@ -4220,18 +4269,13 @@ async function loadTasks() {
   
   console.log('Current tab:', currentTaskTab);
   console.log('Current user name:', currentUserName);
-  console.log('All tasks assigned_to values:', allTasks.map(t => ({ title: t.title, assigned_to: t.assigned_to })));
   
   // Filter based on current tab
   let filteredTasks = allTasks;
   
   if (currentTaskTab === 'my') {
     // My Tasks: Show ONLY tasks where assigned_to exactly matches current user
-    filteredTasks = allTasks.filter(t => {
-      const match = t.assigned_to === currentUserName;
-      console.log(`Task "${t.title}" assigned to "${t.assigned_to}" - matches "${currentUserName}": ${match}`);
-      return match;
-    });
+    filteredTasks = allTasks.filter(t => t.assigned_to === currentUserName);
   } else {
     // All Tasks: Show public tasks + my private tasks
     filteredTasks = allTasks.filter(t => 
@@ -4241,8 +4285,8 @@ async function loadTasks() {
   
   console.log('Filtered tasks count:', filteredTasks.length);
   
-  // Update My Tasks count (only tasks assigned to me)
-  const myTasksCount = allTasks.filter(t => t.assigned_to === currentUserName).length;
+  // Update My Tasks count (only non-archived tasks assigned to me)
+  const myTasksCount = allTasks.filter(t => t.assigned_to === currentUserName && !t.archived_at).length;
   const countEl = document.getElementById('myTasksCount');
   if (countEl) countEl.textContent = myTasksCount;
   
@@ -4264,6 +4308,7 @@ function renderTasksTable(tasks) {
       <td>
         <strong>${escapeHtml(t.title)}</strong>
         ${t.is_private ? '<span class="private-badge">🔒 Private</span>' : ''}
+        ${t.archived_at ? '<span class="archived-badge">📦 Archived</span>' : ''}
       </td>
       <td><span class="badge badge-${t.priority}">${t.priority}</span></td>
       <td><span class="badge badge-${t.status}">${t.status?.replace('_', ' ')}</span></td>
@@ -4272,6 +4317,10 @@ function renderTasksTable(tasks) {
       <td>${t.category || '—'}</td>
       <td>
         <button class="action-btn edit" onclick="event.stopPropagation(); editTask('${t.id}')">Edit</button>
+        ${t.archived_at 
+          ? `<button class="action-btn" onclick="event.stopPropagation(); unarchiveTask('${t.id}')" title="Unarchive">📤</button>`
+          : `<button class="action-btn" onclick="event.stopPropagation(); archiveTask('${t.id}')" title="Archive">📦</button>`
+        }
         <button class="action-btn delete" onclick="event.stopPropagation(); deleteTask('${t.id}')">Delete</button>
       </td>
     </tr>
@@ -4284,7 +4333,7 @@ async function loadClientTasks(clientName) {
   const url = `${SUPABASE_URL}/tasks?select=*&category=eq.${encoded}&order=created_at.desc`;
   
   const res = await fetch(url, {
-    headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+    headers: getAuthHeaders()
   });
 
   if (!res.ok) {
@@ -4333,7 +4382,7 @@ async function createTask(task) {
     headers: {
       "Content-Type": "application/json",
       apikey: ANON_KEY,
-      Authorization: "Bearer " + ANON_KEY,
+      Authorization: "Bearer " + ACCESS_TOKEN,
       Prefer: "return=representation"
     },
     body: JSON.stringify(task)
@@ -4348,12 +4397,20 @@ async function createTask(task) {
 }
 
 async function updateTask(id, updates) {
+  // Auto-set completed_at when status changes to done
+  if (updates.status === 'done') {
+    updates.completed_at = new Date().toISOString();
+  } else if (updates.status && updates.status !== 'done') {
+    // Clear completed_at if task is moved out of done
+    updates.completed_at = null;
+  }
+  
   const res = await fetch(`${SUPABASE_URL}/tasks?id=eq.${id}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       apikey: ANON_KEY,
-      Authorization: "Bearer " + ANON_KEY,
+      Authorization: "Bearer " + ACCESS_TOKEN,
       Prefer: "return=representation"
     },
     body: JSON.stringify(updates)
@@ -4374,7 +4431,7 @@ async function deleteTask(id) {
     method: "DELETE",
     headers: {
       apikey: ANON_KEY,
-      Authorization: "Bearer " + ANON_KEY
+      Authorization: "Bearer " + ACCESS_TOKEN
     }
   });
 
@@ -4383,6 +4440,60 @@ async function deleteTask(id) {
     return;
   }
 
+  // Refresh current view
+  if (currentPage === 'tasks') loadTasks();
+  else if (currentPage === 'kanban') loadKanban();
+  else if (currentPage === 'reports') loadReports();
+  else if (currentPage === 'client' && currentClientName) loadClientTasks(currentClientName);
+}
+
+// Archive a task
+async function archiveTask(id) {
+  const res = await fetch(`${SUPABASE_URL}/tasks?id=eq.${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: ANON_KEY,
+      Authorization: "Bearer " + ACCESS_TOKEN
+    },
+    body: JSON.stringify({ archived_at: new Date().toISOString() })
+  });
+
+  if (!res.ok) {
+    console.error("Failed to archive task");
+    alert("Failed to archive task");
+    return;
+  }
+
+  console.log('✅ Task archived');
+  
+  // Refresh current view
+  if (currentPage === 'tasks') loadTasks();
+  else if (currentPage === 'kanban') loadKanban();
+  else if (currentPage === 'reports') loadReports();
+  else if (currentPage === 'client' && currentClientName) loadClientTasks(currentClientName);
+}
+
+// Unarchive a task
+async function unarchiveTask(id) {
+  const res = await fetch(`${SUPABASE_URL}/tasks?id=eq.${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: ANON_KEY,
+      Authorization: "Bearer " + ACCESS_TOKEN
+    },
+    body: JSON.stringify({ archived_at: null })
+  });
+
+  if (!res.ok) {
+    console.error("Failed to unarchive task");
+    alert("Failed to unarchive task");
+    return;
+  }
+
+  console.log('✅ Task unarchived');
+  
   // Refresh current view
   if (currentPage === 'tasks') loadTasks();
   else if (currentPage === 'kanban') loadKanban();
@@ -4634,8 +4745,9 @@ async function sendAssignmentEmail(assignedToName, task, type) {
    KANBAN BOARD
 ================================ */
 async function loadKanban() {
-  const res = await fetch(`${SUPABASE_URL}/tasks?select=*&order=created_at.desc`, {
-    headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+  // Load non-archived tasks only
+  const res = await fetch(`${SUPABASE_URL}/tasks?select=*&archived_at=is.null&order=created_at.desc`, {
+    headers: getAuthHeaders()
   });
 
   if (!res.ok) {
@@ -4650,9 +4762,34 @@ async function loadKanban() {
                           window.currentSession?.user?.email || '';
   const currentUserId = window.currentSession?.user?.id || '';
   
-  const visibleTasks = allTasks.filter(t => 
-    !t.is_private || t.created_by === currentUserId || t.assigned_to === currentUserName
-  );
+  // Calculate 2 days ago
+  const twoDaysAgo = new Date();
+  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+  
+  const visibleTasks = allTasks.filter(t => {
+    // Filter out private tasks that don't belong to current user
+    if (t.is_private && t.created_by !== currentUserId && t.assigned_to !== currentUserName) {
+      return false;
+    }
+    
+    // Hide completed tasks older than 2 days from the board
+    if (t.status === 'done' && t.completed_at) {
+      const completedDate = new Date(t.completed_at);
+      if (completedDate < twoDaysAgo) {
+        return false;
+      }
+    }
+    
+    // Also check updated_at for done tasks without completed_at
+    if (t.status === 'done' && !t.completed_at && t.updated_at) {
+      const updatedDate = new Date(t.updated_at);
+      if (updatedDate < twoDaysAgo) {
+        return false;
+      }
+    }
+    
+    return true;
+  });
   
   renderKanban(visibleTasks);
 }
@@ -4725,7 +4862,7 @@ let priorityChart = null;
 
 async function loadReports() {
   const res = await fetch(`${SUPABASE_URL}/tasks?select=*`, {
-    headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+    headers: getAuthHeaders()
   });
 
   if (!res.ok) {
@@ -4923,7 +5060,7 @@ async function callFunction(fileName, text) {
     headers: {
       "Content-Type": "application/json",
       apikey: ANON_KEY,
-      Authorization: "Bearer " + ANON_KEY,
+      Authorization: "Bearer " + ACCESS_TOKEN,
     },
     body: JSON.stringify({ fileName, text }),
   });
@@ -4936,7 +5073,7 @@ async function saveInvoiceToSupabase(invoice) {
     headers: {
       "Content-Type": "application/json",
       apikey: ANON_KEY,
-      Authorization: "Bearer " + ANON_KEY,
+      Authorization: "Bearer " + ACCESS_TOKEN,
       Prefer: "return=representation"
     },
     body: JSON.stringify({
@@ -4971,7 +5108,7 @@ async function ensureUserProfile(user) {
   try {
     // Check if profile exists
     const checkRes = await fetch(`${SUPABASE_URL}/profiles?id=eq.${userId}&select=id,email`, {
-      headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+      headers: getAuthHeaders()
     });
     
     if (checkRes.ok) {
@@ -4984,7 +5121,7 @@ async function ensureUserProfile(user) {
           headers: {
             "Content-Type": "application/json",
             apikey: ANON_KEY,
-            Authorization: "Bearer " + ANON_KEY
+            Authorization: "Bearer " + ACCESS_TOKEN
           },
           body: JSON.stringify({
             id: userId,
@@ -5000,7 +5137,7 @@ async function ensureUserProfile(user) {
           headers: {
             "Content-Type": "application/json",
             apikey: ANON_KEY,
-            Authorization: "Bearer " + ANON_KEY
+            Authorization: "Bearer " + ACCESS_TOKEN
           },
           body: JSON.stringify({ email: userEmail })
         });
@@ -5015,7 +5152,7 @@ async function ensureUserProfile(user) {
 async function loadAllUserProfiles() {
   try {
     const res = await fetch(`${SUPABASE_URL}/profiles?select=*`, {
-      headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+      headers: getAuthHeaders()
     });
     
     if (res.ok) {
@@ -5137,7 +5274,7 @@ async function selectColor(colorId) {
       headers: {
         "Content-Type": "application/json",
         apikey: ANON_KEY,
-        Authorization: "Bearer " + ANON_KEY,
+        Authorization: "Bearer " + ACCESS_TOKEN,
         Prefer: "return=representation"
       },
       body: JSON.stringify({ color: colorId })
@@ -5150,7 +5287,7 @@ async function selectColor(colorId) {
         headers: {
           "Content-Type": "application/json",
           apikey: ANON_KEY,
-          Authorization: "Bearer " + ANON_KEY,
+          Authorization: "Bearer " + ACCESS_TOKEN,
           Prefer: "return=representation"
         },
         body: JSON.stringify({
@@ -5210,7 +5347,7 @@ async function saveProfile() {
       headers: {
         "Content-Type": "application/json",
         apikey: ANON_KEY,
-        Authorization: "Bearer " + ANON_KEY
+        Authorization: "Bearer " + ACCESS_TOKEN
       },
       body: JSON.stringify({ display_name: displayName, email: userEmail })
     });
@@ -5222,7 +5359,7 @@ async function saveProfile() {
         headers: {
           "Content-Type": "application/json",
           apikey: ANON_KEY,
-          Authorization: "Bearer " + ANON_KEY
+          Authorization: "Bearer " + ACCESS_TOKEN
         },
         body: JSON.stringify({
           id: userId,
@@ -5281,7 +5418,7 @@ function renderTeamMembers() {
 async function loadTaskComments(taskId) {
   try {
     const res = await fetch(`${SUPABASE_URL}/task_comments?task_id=eq.${taskId}&order=created_at.asc`, {
-      headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+      headers: getAuthHeaders()
     });
     
     if (res.ok) {
@@ -5388,7 +5525,7 @@ async function addTaskComment() {
       headers: {
         "Content-Type": "application/json",
         apikey: ANON_KEY,
-        Authorization: "Bearer " + ANON_KEY,
+        Authorization: "Bearer " + ACCESS_TOKEN,
         Prefer: "return=representation"
       },
       body: JSON.stringify({
@@ -5462,7 +5599,7 @@ async function loadUserNotifications() {
   
   try {
     const res = await fetch(`${SUPABASE_URL}/tasks?select=*&assigned_to=eq.${encodeURIComponent(userName)}&order=created_at.desc`, {
-      headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+      headers: getAuthHeaders()
     });
     
     if (res.ok) {
