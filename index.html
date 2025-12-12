@@ -5827,7 +5827,7 @@ async function processMentions(content, taskId, fromUserName, fromUserId) {
           const result = await res.json();
           console.log('✅ Notification created:', result);
           
-          // Refresh notifications and badge
+          // Refresh notifications and badge immediately
           await loadUserNotifications();
           updateNotificationBadge();
           
@@ -5835,6 +5835,9 @@ async function processMentions(content, taskId, fromUserName, fromUserId) {
           if (currentPage === 'notifications') {
             renderNotifications();
           }
+          
+          // Show a subtle success message
+          console.log('✅ Mention notification sent to', mentionedUser.display_name);
         }
       } catch (err) {
         console.error('❌ Error creating notification:', err);
