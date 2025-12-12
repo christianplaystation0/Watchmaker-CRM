@@ -525,6 +525,7 @@
       padding: 12px;
       border-radius: var(--radius);
       align-items: center;
+      position: relative;
     }
 
     .task-comment-input {
@@ -788,6 +789,165 @@
       padding: 2px 6px;
       border-radius: 4px;
       margin-left: 6px;
+    }
+
+    /* @Mention highlighting */
+    .mention {
+      background: var(--blue-light);
+      color: var(--blue);
+      padding: 1px 4px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    /* Mention autocomplete dropdown */
+    .mention-autocomplete {
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid var(--light-gray);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-hover);
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1000;
+      margin-bottom: 8px;
+    }
+
+    .mention-autocomplete.hidden {
+      display: none;
+    }
+
+    .mention-autocomplete-item {
+      padding: 10px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.2s;
+    }
+
+    .mention-autocomplete-item:hover,
+    .mention-autocomplete-item.selected {
+      background: var(--blue-light);
+    }
+
+    .mention-autocomplete-item-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .mention-autocomplete-item-name {
+      font-weight: 500;
+      color: var(--black);
+    }
+
+    .mention-autocomplete-item-email {
+      font-size: 12px;
+      color: var(--medium-gray);
+    }
+
+    /* Notification badge */
+    .notification-badge {
+      background: var(--red);
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 10px;
+      margin-left: 8px;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    /* Notification item styles */
+    .notification-item {
+      display: flex;
+      gap: 12px;
+      padding: 16px;
+      background: white;
+      border-radius: var(--radius);
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-left: 3px solid transparent;
+    }
+
+    .notification-item:hover {
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-1px);
+    }
+
+    .notification-item.unread {
+      border-left-color: var(--blue);
+      background: var(--blue-light);
+    }
+
+    .notification-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .notification-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .notification-title {
+      font-weight: 600;
+      color: var(--black);
+      margin-bottom: 4px;
+    }
+
+    .notification-message {
+      color: var(--medium-gray);
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .notification-time {
+      font-size: 12px;
+      color: var(--medium-gray);
+      margin-top: 4px;
+    }
+
+    .notification-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .mark-read-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      background: var(--light-gray);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .mark-read-btn:hover {
+      background: var(--medium-gray);
+      color: white;
     }
 
     /* Checkbox Styling */
@@ -3050,8 +3210,9 @@
         <div class="task-comments-list" id="taskCommentsList">
           <!-- JS will populate -->
         </div>
-        <div class="task-comment-input-row">
-          <input type="text" class="task-comment-input" id="taskCommentInput" placeholder="Write a comment...">
+        <div class="task-comment-input-row" style="position: relative;">
+          <input type="text" class="task-comment-input" id="taskCommentInput" placeholder="Write a comment... Use @name to mention someone">
+          <div id="mentionAutocomplete" class="mention-autocomplete hidden"></div>
           <button class="task-comment-btn" id="postCommentBtn" onclick="addTaskComment()">
             <span id="postCommentText">Post</span>
           </button>
@@ -5453,6 +5614,9 @@ function renderTaskComments(comments) {
     const initial = (comment.user_name || '?').charAt(0).toUpperCase();
     const time = formatCommentTime(comment.created_at);
     
+    // Format content with highlighted @mentions
+    const formattedContent = formatMentions(escapeHtml(comment.content));
+    
     return `
       <div class="task-comment">
         <div class="task-comment-avatar" style="background: ${color}">${initial}</div>
@@ -5461,7 +5625,7 @@ function renderTaskComments(comments) {
             <span class="task-comment-author">${escapeHtml(comment.user_name || 'Unknown')}</span>
             <span class="task-comment-time">${time}</span>
           </div>
-          <div class="task-comment-text">${escapeHtml(comment.content)}</div>
+          <div class="task-comment-text">${formattedContent}</div>
         </div>
       </div>
     `;
@@ -5471,6 +5635,12 @@ function renderTaskComments(comments) {
   setTimeout(() => {
     container.scrollTop = container.scrollHeight;
   }, 100);
+}
+
+// Format @mentions with highlighting
+function formatMentions(text) {
+  // Match @name or @"name with spaces"
+  return text.replace(/@([a-zA-Z0-9_]+|&quot;[^&]+&quot;|&#39;[^&]+&#39;)/g, '<span class="mention">@$1</span>');
 }
 
 // Helper to format comment time nicely
@@ -5539,6 +5709,9 @@ async function addTaskComment() {
     
     if (!res.ok) throw new Error("Failed to add comment");
     
+    // Check for @mentions and create notifications
+    await processMentions(content, currentDetailTaskId, userName, user.id);
+    
     // Clear input with smooth effect
     input.value = "";
     
@@ -5563,13 +5736,284 @@ async function addTaskComment() {
   }
 }
 
+// Process @mentions in comments and create notifications
+async function processMentions(content, taskId, fromUserName, fromUserId) {
+  console.log('🔍 processMentions called:', { content, taskId, fromUserName });
+  
+  // Find all @mentions (matches @name or @"name with spaces")
+  const mentionPattern = /@([a-zA-Z0-9_]+|"[^"]+"|'[^']+')/g;
+  const mentions = content.match(mentionPattern);
+  
+  console.log('🔍 Found mentions:', mentions);
+  
+  if (!mentions || mentions.length === 0) {
+    console.log('🔍 No mentions found');
+    return;
+  }
+  
+  // Make sure profiles are loaded
+  if (!allUserProfiles || allUserProfiles.length === 0) {
+    console.log('🔍 Loading user profiles...');
+    await loadAllUserProfiles();
+  }
+  
+  console.log('🔍 Available profiles:', allUserProfiles.map(p => p.display_name));
+  
+  // Get the task title for the notification
+  const task = allTasks.find(t => t.id === taskId);
+  const taskTitle = task?.title || 'a task';
+  
+  for (const mention of mentions) {
+    // Clean up the mention (remove @ and quotes)
+    let mentionName = mention.substring(1).replace(/['"]/g, '').trim();
+    console.log('🔍 Processing mention:', mentionName);
+    
+    // Find the user by display_name (case-insensitive, exact or partial match)
+    const mentionedUser = allUserProfiles.find(p => {
+      const displayName = (p.display_name || '').toLowerCase().trim();
+      const email = (p.email || '').toLowerCase().trim();
+      const searchName = mentionName.toLowerCase().trim();
+      
+      // Exact match (case-insensitive)
+      if (displayName === searchName || email === searchName) return true;
+      
+      // Partial match - check if search name is contained in display name
+      if (displayName && displayName.includes(searchName)) return true;
+      
+      // Check if display name starts with search name
+      if (displayName && displayName.startsWith(searchName)) return true;
+      
+      return false;
+    });
+    
+    console.log('🔍 Found user:', mentionedUser ? `${mentionedUser.display_name} (${mentionedUser.id})` : 'NOT FOUND');
+    console.log('🔍 Search was for:', mentionName);
+    console.log('🔍 Available names:', allUserProfiles.map(p => p.display_name || p.email));
+    
+    if (mentionedUser) {
+      // Create notification for the mentioned user
+      try {
+        const notificationData = {
+          user_id: mentionedUser.id,
+          type: 'mention',
+          title: `${fromUserName} mentioned you`,
+          message: `in "${taskTitle}": ${content.substring(0, 100)}${content.length > 100 ? '...' : ''}`,
+          task_id: taskId,
+          from_user_id: fromUserId,
+          from_user_name: fromUserName
+        };
+        
+        console.log('🔍 Creating notification:', notificationData);
+        console.log('🔍 Using ACCESS_TOKEN:', ACCESS_TOKEN ? ACCESS_TOKEN.substring(0, 20) + '...' : 'NONE');
+        
+        const res = await fetch(`${SUPABASE_URL}/notifications`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: ANON_KEY,
+            Authorization: "Bearer " + ACCESS_TOKEN,
+            Prefer: "return=representation"
+          },
+          body: JSON.stringify(notificationData)
+        });
+        
+        console.log('🔍 Notification response status:', res.status);
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('❌ Failed to create notification:', res.status, errorText);
+          alert(`Failed to create notification: ${res.status} - ${errorText}`);
+        } else {
+          const result = await res.json();
+          console.log('✅ Notification created:', result);
+          
+          // Refresh notifications and badge
+          await loadUserNotifications();
+          updateNotificationBadge();
+          
+          // Refresh notifications page if open
+          if (currentPage === 'notifications') {
+            renderNotifications();
+          }
+        }
+      } catch (err) {
+        console.error('❌ Error creating notification:', err);
+      }
+    } else if (!mentionedUser) {
+      console.log('⚠️ User not found for mention:', mentionName);
+    }
+  }
+}
+
 // Handle Enter key in comment input
 document.addEventListener('keydown', function(e) {
-  if (e.target.id === 'taskCommentInput' && e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    addTaskComment();
+  const input = e.target;
+  if (input.id === 'taskCommentInput') {
+    const autocomplete = document.getElementById('mentionAutocomplete');
+    
+    // Handle autocomplete navigation
+    if (autocomplete && !autocomplete.classList.contains('hidden')) {
+      const items = autocomplete.querySelectorAll('.mention-autocomplete-item');
+      const selected = autocomplete.querySelector('.mention-autocomplete-item.selected');
+      let selectedIndex = selected ? Array.from(items).indexOf(selected) : -1;
+      
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (selected) selected.classList.remove('selected');
+        selectedIndex = (selectedIndex + 1) % items.length;
+        items[selectedIndex].classList.add('selected');
+        items[selectedIndex].scrollIntoView({ block: 'nearest' });
+        return;
+      }
+      
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (selected) selected.classList.remove('selected');
+        selectedIndex = selectedIndex <= 0 ? items.length - 1 : selectedIndex - 1;
+        items[selectedIndex].classList.add('selected');
+        items[selectedIndex].scrollIntoView({ block: 'nearest' });
+        return;
+      }
+      
+      if (e.key === 'Enter' && selected) {
+        e.preventDefault();
+        const displayName = selected.dataset.name;
+        insertMention(input, displayName);
+        return;
+      }
+      
+      if (e.key === 'Escape') {
+        autocomplete.classList.add('hidden');
+        return;
+      }
+    }
+    
+    // Post comment on Enter (if not in autocomplete)
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      addTaskComment();
+    }
   }
 });
+
+// Handle @mention autocomplete
+document.addEventListener('input', function(e) {
+  if (e.target.id === 'taskCommentInput') {
+    handleMentionAutocomplete(e.target);
+  }
+});
+
+// Close autocomplete when clicking outside
+document.addEventListener('click', function(e) {
+  const autocomplete = document.getElementById('mentionAutocomplete');
+  const input = document.getElementById('taskCommentInput');
+  
+  if (autocomplete && !autocomplete.contains(e.target) && e.target !== input) {
+    autocomplete.classList.add('hidden');
+  }
+});
+
+// Show autocomplete dropdown for @mentions
+function handleMentionAutocomplete(input) {
+  const value = input.value;
+  const cursorPos = input.selectionStart;
+  const textBeforeCursor = value.substring(0, cursorPos);
+  const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+  
+  const autocomplete = document.getElementById('mentionAutocomplete');
+  
+  // Check if we're typing an @mention
+  if (lastAtIndex !== -1) {
+    const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1);
+    // Only show if there's no space after @
+    if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n')) {
+      showMentionAutocomplete(input, textAfterAt, lastAtIndex);
+      return;
+    }
+  }
+  
+  // Hide autocomplete
+  if (autocomplete) {
+    autocomplete.classList.add('hidden');
+  }
+}
+
+// Show mention autocomplete dropdown
+function showMentionAutocomplete(input, searchText, atIndex) {
+  const autocomplete = document.getElementById('mentionAutocomplete');
+  if (!autocomplete) return;
+  
+  // Make sure profiles are loaded
+  if (!allUserProfiles || allUserProfiles.length === 0) {
+    loadAllUserProfiles().then(() => {
+      showMentionAutocomplete(input, searchText, atIndex);
+    });
+    return;
+  }
+  
+  // Filter users by search text (case-insensitive)
+  const searchLower = searchText.toLowerCase();
+  const filtered = allUserProfiles.filter(p => {
+    const name = (p.display_name || '').toLowerCase();
+    const email = (p.email || '').toLowerCase();
+    return name.includes(searchLower) || email.includes(searchLower);
+  });
+  
+  if (filtered.length === 0) {
+    autocomplete.classList.add('hidden');
+    return;
+  }
+  
+  // Render autocomplete items
+  autocomplete.innerHTML = filtered.map((profile, index) => {
+    const name = profile.display_name || profile.email || 'Unknown';
+    const initial = name.charAt(0).toUpperCase();
+    const color = profile.color ? USER_COLORS.find(c => c.id === profile.color)?.hex : '#6B6B6B';
+    const selectedClass = index === 0 ? 'selected' : '';
+    
+    return `
+      <div class="mention-autocomplete-item ${selectedClass}" 
+           data-name="${escapeHtml(name)}"
+           onclick="insertMention(document.getElementById('taskCommentInput'), '${escapeHtml(name)}')">
+        <div class="mention-autocomplete-item-avatar" style="background: ${color}">${initial}</div>
+        <div>
+          <div class="mention-autocomplete-item-name">${escapeHtml(name)}</div>
+          ${profile.email ? `<div class="mention-autocomplete-item-email">${escapeHtml(profile.email)}</div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  autocomplete.classList.remove('hidden');
+}
+
+// Insert mention into input
+function insertMention(input, displayName) {
+  const value = input.value;
+  const cursorPos = input.selectionStart;
+  const textBeforeCursor = value.substring(0, cursorPos);
+  const textAfterCursor = value.substring(cursorPos);
+  const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+  
+  if (lastAtIndex === -1) return;
+  
+  const textBeforeAt = value.substring(0, lastAtIndex);
+  const newValue = textBeforeAt + '@' + displayName + ' ' + textAfterCursor;
+  
+  input.value = newValue;
+  const newCursorPos = lastAtIndex + displayName.length + 2; // +1 for @, +1 for space
+  input.setSelectionRange(newCursorPos, newCursorPos);
+  input.focus();
+  
+  // Hide autocomplete
+  const autocomplete = document.getElementById('mentionAutocomplete');
+  if (autocomplete) {
+    autocomplete.classList.add('hidden');
+  }
+  
+  // Continue handling autocomplete
+  handleMentionAutocomplete(input);
+}
 
 /* ================================
    NOTIFICATIONS
@@ -5591,24 +6035,28 @@ function saveReadNotificationIds(ids) {
   localStorage.setItem('readNotifications', JSON.stringify(ids));
 }
 
-// Load tasks assigned to current user as notifications
+// Load tasks assigned to current user and @mention notifications
 async function loadUserNotifications() {
   if (!window.currentSession) return;
   
   const userName = window.currentSession.user.user_metadata?.display_name || window.currentSession.user.email;
+  const userId = window.currentSession.user.id;
+  const readIds = getReadNotificationIds();
+  
+  userNotifications = [];
   
   try {
-    const res = await fetch(`${SUPABASE_URL}/tasks?select=*&assigned_to=eq.${encodeURIComponent(userName)}&order=created_at.desc`, {
+    // Load task assignments
+    const tasksRes = await fetch(`${SUPABASE_URL}/tasks?select=*&assigned_to=eq.${encodeURIComponent(userName)}&order=created_at.desc`, {
       headers: getAuthHeaders()
     });
     
-    if (res.ok) {
-      const tasks = await res.json();
-      const readIds = getReadNotificationIds();
+    if (tasksRes.ok) {
+      const tasks = await tasksRes.json();
       
       // Convert tasks to notifications
-      userNotifications = tasks.map(task => ({
-        id: task.id,
+      const taskNotifs = tasks.map(task => ({
+        id: 'task_' + task.id,
         type: 'task_assigned',
         title: 'Task Assigned',
         message: `You have been assigned to: "${task.title}"`,
@@ -5617,11 +6065,42 @@ async function loadUserNotifications() {
         priority: task.priority,
         dueDate: task.due_date,
         createdAt: task.created_at,
-        read: readIds.includes(task.id)
+        read: readIds.includes('task_' + task.id)
       }));
       
-      updateNotificationBadge();
+      userNotifications.push(...taskNotifs);
     }
+    
+    // Load @mention notifications from notifications table (filtered by current user)
+    const mentionsRes = await fetch(`${SUPABASE_URL}/notifications?select=*&user_id=eq.${userId}&order=created_at.desc`, {
+      headers: getAuthHeaders()
+    });
+    
+    if (mentionsRes.ok) {
+      const mentions = await mentionsRes.json();
+      console.log('🔍 Loaded mention notifications:', mentions);
+      
+      const mentionNotifs = mentions.map(m => ({
+        id: 'mention_' + m.id,
+        dbId: m.id,
+        type: 'mention',
+        title: m.title,
+        message: m.message,
+        taskId: m.task_id,
+        fromUser: m.from_user_name,
+        createdAt: m.created_at,
+        read: m.read || readIds.includes('mention_' + m.id)
+      }));
+      
+      userNotifications.push(...mentionNotifs);
+    } else {
+      console.error('❌ Failed to load notifications:', mentionsRes.status, await mentionsRes.text());
+    }
+    
+    // Sort all notifications by date (newest first)
+    userNotifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    updateNotificationBadge();
   } catch (err) {
     console.error("Error loading notifications:", err);
   }
@@ -5654,7 +6133,7 @@ function renderNotifications() {
       <div class="no-notifications">
         <div class="no-notifications-icon">🔔</div>
         <div class="no-notifications-text">No notifications yet</div>
-        <div class="no-notifications-subtext">You'll see notifications here when tasks are assigned to you</div>
+        <div class="no-notifications-subtext">You'll see notifications here when you're mentioned or assigned tasks</div>
       </div>
     `;
     return;
@@ -5662,34 +6141,40 @@ function renderNotifications() {
   
   container.innerHTML = userNotifications.map(notif => {
     const timeAgo = formatCommentTime(notif.createdAt);
-    const priorityColor = {
-      low: 'var(--blue)',
-      medium: 'var(--green)',
-      high: 'var(--orange)',
-      urgent: 'var(--red)'
-    }[notif.priority] || 'var(--medium-gray)';
+    const isMention = notif.type === 'mention';
+    const icon = isMention ? '💬' : '📋';
+    const unreadClass = notif.read ? '' : 'unread';
     
     return `
-      <div class="notification-item ${notif.read ? 'read' : ''}" onclick="handleNotificationClick('${notif.id}')">
-        <div class="notification-icon">📋</div>
+      <div class="notification-item ${unreadClass}" onclick="handleNotificationClick('${notif.id}', '${notif.taskId || ''}')">
+        <div class="notification-icon" style="background: ${isMention ? 'var(--blue)' : 'var(--purple)'}">${icon}</div>
         <div class="notification-content">
-          <div class="notification-title">${notif.title}</div>
+          <div class="notification-title">${escapeHtml(notif.title)}</div>
           <div class="notification-message">${escapeHtml(notif.message)}</div>
-          <div class="notification-meta">
-            <span class="badge badge-${notif.priority}" style="font-size: 11px;">${notif.priority}</span>
-            ${notif.dueDate ? `<span class="notification-time">Due: ${notif.dueDate}</span>` : ''}
-            <span class="notification-time">${timeAgo}</span>
-            <span class="notification-badge-new">New</span>
-          </div>
+          <div class="notification-time">${timeAgo}</div>
         </div>
+        ${!notif.read ? '<div class="notification-actions"><button class="mark-read-btn" onclick="event.stopPropagation(); markNotificationRead(\''+notif.id+'\')">Mark read</button></div>' : ''}
       </div>
     `;
   }).join('');
 }
 
 // Handle clicking on a notification
-function handleNotificationClick(notifId) {
+function handleNotificationClick(notifId, taskId) {
   // Mark as read
+  markNotificationRead(notifId);
+  
+  // Navigate to the task
+  if (taskId) {
+    // Load tasks first to ensure allTasks is populated
+    loadTasks().then(() => {
+      openTaskDetail(taskId);
+    });
+  }
+}
+
+// Mark a single notification as read
+async function markNotificationRead(notifId) {
   const notif = userNotifications.find(n => n.id === notifId);
   if (notif && !notif.read) {
     notif.read = true;
@@ -5701,19 +6186,25 @@ function handleNotificationClick(notifId) {
       saveReadNotificationIds(readIds);
     }
     
+    // If it's a database notification (mention), mark it as read in the database too
+    if (notif.dbId) {
+      try {
+        await fetch(`${SUPABASE_URL}/notifications?id=eq.${notif.dbId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: ANON_KEY,
+            Authorization: "Bearer " + ACCESS_TOKEN
+          },
+          body: JSON.stringify({ read: true })
+        });
+      } catch (err) {
+        console.error("Error marking notification as read:", err);
+      }
+    }
+    
     updateNotificationBadge();
     renderNotifications();
-  }
-  
-  // Navigate to the task
-  if (notif) {
-    // Load tasks first to ensure allTasks is populated
-    loadTasks().then(() => {
-      const task = allTasks.find(t => t.id === notifId);
-      if (task) {
-        openTaskDetail(notifId);
-      }
-    });
   }
 }
 
