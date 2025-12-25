@@ -267,13 +267,8 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  // Supabase config (same as your dashboard)
-  const SUPABASE_URL = "https://cagajzhridvohsrviwaw.supabase.co";
-  const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhZ2FqemhyaWR2b2hzcnZpd2F3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyODQ0ODYsImV4cCI6MjA3OTg2MDQ4Nn0.CSZvT7tPgoEyXwUW_wLOzZUfSUPLAZMpbXvvLOn5cNo";
-  
-  const supabase = window.supabase.createClient(SUPABASE_URL, ANON_KEY);
+<script type="module">
+  import { supabase } from "./supabase.js";
 
   // Check if already logged in
   supabase.auth.getSession().then(({ data }) => {
@@ -318,6 +313,9 @@
       btn.textContent = "Sign In";
     }
   }
+  
+  // Make handleLogin available globally for inline onclick
+  window.handleLogin = handleLogin;
 </script>
 </body>
 </html>
